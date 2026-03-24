@@ -100,16 +100,30 @@ export default function PaymentSimulator({
 
       const data = await res.json()
 
+      console.log('[PaymentSimulator] Respuesta del servidor:', data)
+
       if (data.mode === 'live' && data.init_point) {
-        // Redirect to MP Checkout Pro (Nequi + PSE pre-selected)
+        // Redirige al Checkout Pro de MercadoPago
         window.location.href = data.init_point
-        return  // page navigates away; don't reset loading state
+        return  // la página navega; no resetear loading
       }
 
-      // No MP credentials configured → simulation fallback
-      await onPay()
-      setSimSuccess(true)
-    } catch {
+      if (data.mode === 'error' || (data.mode !== 'live' && data.mode !== 'simulation')) {
+        // Error real del servidor — mostrar mensaje detallado
+        const msg = data.error || 'Error desconocido del servidor'
+        console.error('[PaymentSimulator] Error MP:', msg)
+        alert(`⚠️ Error al generar el pago:\n\n${msg}\n\nRevisa la consola del servidor para más detalles.`)
+        return
+      }
+
+      if (data.mode === 'simulation') {
+        // Solo usar simulación si explícitamente no hay token configurado
+        console.warn('[PaymentSimulator] Modo simulación activo. Configura MP_ACCESS_TOKEN en .env.local para pagos reales.')
+        await onPay()
+        setSimSuccess(true)
+      }
+    } catch (fetchErr) {
+      console.error('[PaymentSimulator] Error de red:', fetchErr)
       setError('No se pudo conectar con el servidor de pagos. Intenta nuevamente.')
     } finally {
       setMpLoading(false)
