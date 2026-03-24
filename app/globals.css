@@ -1,0 +1,146 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─── CSS Custom Properties — Light (public store) ──────────────── */
+:root {
+  --color-bg: #FFFFFF;
+  --color-surface: #F5F5F7;
+  --color-surface-raised: #EBEBED;
+  --color-accent: #0066FF;
+  --color-accent-hover: #0052CC;
+  --color-text: #1D1D1F;
+  --color-muted: rgba(0, 0, 0, 0.5);
+  --color-muted-low: rgba(0, 0, 0, 0.35);
+  --color-border: rgba(0, 0, 0, 0.08);
+  --color-border-strong: rgba(0, 0, 0, 0.15);
+  --radius-card: 16px;
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06), 0 4px 16px rgba(0, 0, 0, 0.08);
+  --shadow-elevated: 0 20px 48px rgba(0, 0, 0, 0.12);
+}
+
+/* ─── Admin dark scope — restores dark values for /admin/* ──────── */
+.admin-dark {
+  --color-bg: #0A0A0A;
+  --color-surface: #1A1A1A;
+  --color-surface-raised: #242424;
+  --color-text: #FFFFFF;
+  --color-muted: rgba(255, 255, 255, 0.5);
+  --color-muted-low: rgba(255, 255, 255, 0.3);
+  --color-border: rgba(255, 255, 255, 0.08);
+  --color-border-strong: rgba(255, 255, 255, 0.15);
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.4), 0 4px 16px rgba(0, 0, 0, 0.3);
+  --shadow-elevated: 0 8px 32px rgba(0, 0, 0, 0.6);
+}
+
+/* ─── Base Reset ─────────────────────────────────────────────────── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+body.cart-open {
+  overflow: hidden;
+}
+
+/* ─── Custom Scrollbar ───────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+::-webkit-scrollbar-track {
+  background: #F5F5F7;
+}
+::-webkit-scrollbar-thumb {
+  background: #C7C7CC;
+  border-radius: 2px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #AEAEB2;
+}
+
+/* ─── Selection ──────────────────────────────────────────────────── */
+::selection {
+  background-color: rgba(0, 102, 255, 0.12);
+  color: #1D1D1F;
+}
+
+/* ─── Focus Ring ─────────────────────────────────────────────────── */
+:focus-visible {
+  outline: 2px solid #0066FF;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ─── Utility Classes ────────────────────────────────────────────── */
+@layer utilities {
+  .text-gradient {
+    background: linear-gradient(135deg, #1D1D1F 0%, rgba(29, 29, 31, 0.65) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .text-gradient-accent {
+    background: linear-gradient(135deg, #0066FF 0%, #00AAFF 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* CSS-var-based utilities: auto-adapt to light/dark via CSS scope */
+  .glass {
+    background: rgba(255, 255, 255, 0.75);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--color-border);
+  }
+
+  .card {
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+  }
+
+  .card-hover {
+    transition: transform 0.3s ease-out, border-color 0.3s ease-out, box-shadow 0.3s ease-out;
+  }
+
+  .card-hover:hover {
+    transform: translateY(-4px);
+    border-color: var(--color-border-strong);
+    box-shadow: var(--shadow-elevated);
+  }
+
+  .animate-stagger-1 { animation-delay: 0ms; }
+  .animate-stagger-2 { animation-delay: 100ms; }
+  .animate-stagger-3 { animation-delay: 200ms; }
+  .animate-stagger-4 { animation-delay: 300ms; }
+}
+
+/* ─── Admin Layout ───────────────────────────────────────────────── */
+.admin-sidebar {
+  width: 240px;
+  flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+  .admin-sidebar {
+    display: none;
+  }
+}
