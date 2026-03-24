@@ -58,14 +58,13 @@ export async function POST(req: NextRequest) {
     const preference = await new Preference(client).create({
       body: {
         items: mpItems,
-        payer: customer
-          ? {
-              name: customer.firstName,
-              surname: customer.lastName,
-              email: customer.email,
-              phone: { area_code: '57', number: (customer.phone || '').replace(/\D/g, '') },
-            }
-          : undefined,
+        // MP exige un email válido en el payer — usa fallback si el usuario no lo envió
+        payer: {
+          name: customer?.firstName || 'Cliente',
+          surname: customer?.lastName || 'MSN',
+          email: customer?.email || 'test_user_123456@testuser.com',
+          phone: { area_code: '57', number: (customer?.phone || '').replace(/\D/g, '') },
+        },
         back_urls: {
           success: `${baseUrl}/checkout/success`,
           failure: `${baseUrl}/checkout?error=failure`,
@@ -73,8 +72,8 @@ export async function POST(req: NextRequest) {
         },
         auto_return: 'approved',
         notification_url: `${baseUrl}/api/mercadopago/webhook`,
+        // Sin restricciones — MP muestra todos los métodos disponibles en la cuenta
         payment_methods: {
-          default_payment_method_id: 'nequi',
           installments: 1,
         },
       },
@@ -111,11 +110,27 @@ export async function POST(req: NextRequest) {
       preference_id: preference.id,
     })
   } catch (err) {
-    const message = err instanceof Error ? err.message : String(err)
-    console.error('[MP create-preference] Error:', message)
+    // El SDK de MP lanza objetos propios, no instancias de Error estándar.
+    // JSON.stringify expone el cuerpo completo: status, cause[], message anidado.
+    let detail: string
+    try {
+      detail = JSON.stringify(err, Object.getOwnPropertyNames(err), 2)
+    } catch {
+      detail = String(err)
+    }
+
+    console.error('[MP Error Detallado]:', detail)
+
+    // Extraer mensaje legible para devolver al frontend
+    const readable =
+      (err as { message?: string })?.message ||
+      (err as { error?: string })?.error ||
+      detail
+
     return NextResponse.json({
       mode: 'error',
-      error: message,
+      error: readable,
+      detail,  // el frontend puede mostrarlo en el alert para diagnóstico
     })
   }
 }

@@ -109,10 +109,11 @@ export default function PaymentSimulator({
       }
 
       if (data.mode === 'error' || (data.mode !== 'live' && data.mode !== 'simulation')) {
-        // Error real del servidor — mostrar mensaje detallado
+        // Error real del servidor — mostrar mensaje detallado para diagnóstico
         const msg = data.error || 'Error desconocido del servidor'
-        console.error('[PaymentSimulator] Error MP:', msg)
-        alert(`⚠️ Error al generar el pago:\n\n${msg}\n\nRevisa la consola del servidor para más detalles.`)
+        const detail = data.detail ? `\n\nDetalle técnico:\n${data.detail}` : ''
+        console.error('[PaymentSimulator] Error MP completo:', data.detail || msg)
+        alert(`⚠️ Error al generar el pago:\n\n${msg}${detail}`)
         return
       }
 
