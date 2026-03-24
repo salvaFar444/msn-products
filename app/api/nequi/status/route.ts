@@ -1,20 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getOrderByPreferenceId, updateOrderStatus } from '@/lib/orders'
-
-async function getNequiToken(clientId: string, clientSecret: string, apiUrl: string) {
-  const res = await fetch(`${apiUrl}/oauth2/token`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({
-      grant_type: 'client_credentials',
-      client_id: clientId,
-      client_secret: clientSecret,
-    }),
-  })
-  if (!res.ok) throw new Error(`Nequi OAuth failed: ${res.status}`)
-  const data = await res.json()
-  return data.access_token as string
-}
+import { getNequiToken, hasNequiCredentials, NEQUI_API_URL } from '@/lib/nequi'
+import { reduceStockForItems } from '@/lib/stock'
+import type { OrderItem } from '@/types'
 
 export async function GET(req: NextRequest) {
   try {
@@ -25,19 +13,16 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ status: 'failed' }, { status: 400 })
     }
 
-    const clientId = process.env.NEQUI_CLIENT_ID
-    const clientSecret = process.env.NEQUI_CLIENT_SECRET
-    const apiUrl = process.env.NEQUI_API_URL || 'https://api.nequi.com.co'
-
-    if (!clientId || !clientSecret) {
+    if (!hasNequiCredentials()) {
       return NextResponse.json({ status: 'failed' })
     }
 
-    const token = await getNequiToken(clientId, clientSecret, apiUrl)
+    const token = await getNequiToken()
 
-    const statusRes = await fetch(`${apiUrl}/payments/gateway/push/${encodeURIComponent(id)}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
+    const statusRes = await fetch(
+      `${NEQUI_API_URL}/payments/gateway/push/${encodeURIComponent(id)}`,
+      { headers: { Authorization: `Bearer ${token}` } }
+    )
 
     if (!statusRes.ok) {
       console.error('[Nequi status]', statusRes.status)
@@ -61,11 +46,20 @@ export async function GET(req: NextRequest) {
 
     const mapped = statusMap[rawStatus.toUpperCase()] ?? 'pending'
 
-    // Persist final states to Supabase
     if (mapped === 'approved' || mapped === 'failed') {
       const order = await getOrderByPreferenceId(id)
       if (order) {
-        await updateOrderStatus(order.id, mapped === 'approved' ? 'approved' : 'rejected')
+        const wasAlreadyApproved = order.status === 'approved'
+
+        await updateOrderStatus(
+          order.id,
+          mapped === 'approved' ? 'approved' : 'rejected'
+        )
+
+        // Reduce stock once on approval
+        if (mapped === 'approved' && !wasAlreadyApproved) {
+          await reduceStockForItems(order.items as OrderItem[])
+        }
       }
     }
 

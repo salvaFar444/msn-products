@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getOrderByPreferenceId, updateOrderStatus } from '@/lib/orders'
+import { reduceStockForItems } from '@/lib/stock'
+import type { OrderItem } from '@/types'
 
 export async function POST(req: NextRequest) {
   try {
@@ -15,7 +17,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ ok: true })
     }
 
-    // Fetch payment details from MP
+    // Fetch payment details from MercadoPago
     const mpRes = await fetch(`https://api.mercadopago.com/v1/payments/${data.id}`, {
       headers: { Authorization: `Bearer ${accessToken}` },
     })
@@ -45,14 +47,21 @@ export async function POST(req: NextRequest) {
     if (lookupId) {
       const order = await getOrderByPreferenceId(lookupId)
       if (order) {
+        const wasAlreadyApproved = order.status === 'approved'
+
         await updateOrderStatus(order.id, mapped, String(data.id))
+
+        // Reduce stock exactly once when a payment transitions to approved
+        if (mapped === 'approved' && !wasAlreadyApproved) {
+          await reduceStockForItems(order.items as OrderItem[])
+        }
       }
     }
 
     return NextResponse.json({ ok: true })
   } catch (err) {
     console.error('[MP webhook]', err)
-    // Always return 200 so MP doesn't retry
+    // Always return 200 — MP retries on non-200
     return NextResponse.json({ ok: true })
   }
 }
