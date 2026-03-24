@@ -1,3 +1,11 @@
+/**
+ * POST /api/mercadopago/webhook
+ *
+ * Receives MercadoPago IPN/webhook notifications.
+ * On payment approval: updates order status in Supabase and reduces stock.
+ * Always returns 200 — MP retries on non-2xx responses.
+ */
+
 import { NextRequest, NextResponse } from 'next/server'
 import { getOrderByPreferenceId, updateOrderStatus } from '@/lib/orders'
 import { reduceStockForItems } from '@/lib/stock'
@@ -8,16 +16,17 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
     const { type, data } = body
 
+    // We only handle payment notifications
     if (type !== 'payment' || !data?.id) {
       return NextResponse.json({ ok: true })
     }
 
-    const accessToken = process.env.MERCADOPAGO_ACCESS_TOKEN
+    const accessToken = process.env.MP_ACCESS_TOKEN
     if (!accessToken) {
       return NextResponse.json({ ok: true })
     }
 
-    // Fetch payment details from MercadoPago
+    // ── Fetch payment details from MercadoPago ───────────────────────
     const mpRes = await fetch(`https://api.mercadopago.com/v1/payments/${data.id}`, {
       headers: { Authorization: `Bearer ${accessToken}` },
     })
@@ -30,6 +39,7 @@ export async function POST(req: NextRequest) {
     const payment = await mpRes.json()
     const { status, external_reference, preference_id } = payment
 
+    // ── Map MP status to our OrderStatus ────────────────────────────
     const statusMap: Record<string, 'approved' | 'rejected' | 'cancelled' | 'pending'> = {
       approved: 'approved',
       rejected: 'rejected',
@@ -61,7 +71,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true })
   } catch (err) {
     console.error('[MP webhook]', err)
-    // Always return 200 — MP retries on non-200
     return NextResponse.json({ ok: true })
   }
 }
