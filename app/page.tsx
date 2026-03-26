@@ -1,6 +1,8 @@
 import type { Metadata } from 'next'
 import Hero from '@/components/home/Hero'
 import ProductGrid from '@/components/home/ProductGrid'
+import TrustSection from '@/components/home/TrustSection'
+import Testimonials from '@/components/home/Testimonials'
 import { getAllProducts } from '@/lib/products'
 import { SITE_NAME, SITE_DESCRIPTION, PRODUCTS_REVALIDATE_SECONDS } from '@/lib/constants'
 
@@ -17,7 +19,9 @@ export default async function HomePage() {
   return (
     <>
       <Hero />
+      <TrustSection />
       <ProductGrid products={products} />
+      <Testimonials />
     </>
   )
 }

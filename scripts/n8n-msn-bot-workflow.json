@@ -1,0 +1,190 @@
+{
+  "name": "Bot Ventas WhatsApp - MSN Products",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": ["messages"],
+        "options": {}
+      },
+      "id": "550e8400-e29b-41d4-a716-446655440001",
+      "name": "WhatsApp Trigger",
+      "type": "n8n-nodes-base.whatsAppTrigger",
+      "typeVersion": 1,
+      "position": [200, 300],
+      "webhookId": "msn-products-whatsapp-bot-v1"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('WhatsApp Trigger').item.json.entry[0].changes[0].value.messages[0].text.body }}",
+        "options": {
+          "systemMessage": "Eres un asistente de ventas formal y profesional de MSN Products. Tu único objetivo es ayudar al cliente a elegir productos del catálogo disponible en https://msn-products.vercel.app/ y cerrar la venta.\n- Si es el primer mensaje del cliente, salúdalo formalmente y ofrece el catálogo con el link.\n- Responde dudas sobre productos con información del catálogo.\n- Cuando el cliente confirme qué quiere comprar, extrae el nombre del producto y precio, y avisa que generarás el link de pago.\n- Mantén siempre un tono formal y profesional.\n- Nunca salgas del tema de ventas."
+        }
+      },
+      "id": "550e8400-e29b-41d4-a716-446655440002",
+      "name": "Agente IA Ventas",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.6,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "model": "claude-3-5-sonnet-20241022",
+        "options": {}
+      },
+      "id": "550e8400-e29b-41d4-a716-446655440003",
+      "name": "Claude Anthropic",
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.2,
+      "position": [360, 520]
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('WhatsApp Trigger').item.json.entry[0].changes[0].value.contacts[0].wa_id }}",
+        "contextWindowLength": 10
+      },
+      "id": "550e8400-e29b-41d4-a716-446655440004",
+      "name": "Buffer Memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.2,
+      "position": [560, 520]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "cond-purchase-intent",
+              "leftValue": "={{ $('WhatsApp Trigger').item.json.entry[0].changes[0].value.messages[0].text.body }}",
+              "rightValue": "quiero|comprar|llevar|pagar|precio|cuánto cuesta|cuanto cuesta|me lo llevo|quiero uno|quiero una",
+              "operator": {
+                "type": "string",
+                "operation": "regex"
+              }
+            }
+          ],
+          "combinator": "or"
+        }
+      },
+      "id": "550e8400-e29b-41d4-a716-446655440005",
+      "name": "¿Cliente quiere comprar?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [700, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.mercadopago.com/checkout/preferences",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer MERCADO_PAGO_ACCESS_TOKEN_PLACEHOLDER"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"items\": [\n    {\n      \"title\": \"{{ $('Agente IA Ventas').item.json.output }}\",\n      \"quantity\": 1,\n      \"currency_id\": \"ARS\",\n      \"unit_price\": 100\n    }\n  ],\n  \"payer\": {\n    \"name\": \"Cliente MSN Products\"\n  },\n  \"back_urls\": {\n    \"success\": \"https://msn-products.vercel.app/\",\n    \"failure\": \"https://msn-products.vercel.app/\",\n    \"pending\": \"https://msn-products.vercel.app/\"\n  },\n  \"auto_return\": \"approved\",\n  \"statement_descriptor\": \"MSN Products\"\n}",
+        "options": {}
+      },
+      "id": "550e8400-e29b-41d4-a716-446655440006",
+      "name": "Generar Link Mercado Pago",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [960, 160]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "send",
+        "phoneNumberId": "WHATSAPP_PHONE_NUMBER_ID_PLACEHOLDER",
+        "recipientPhoneNumber": "={{ $('WhatsApp Trigger').item.json.entry[0].changes[0].value.contacts[0].wa_id }}",
+        "textBody": "=Estimado/a cliente,\n\nHemos generado su enlace de pago seguro a través de Mercado Pago:\n\n🔗 {{ $json.init_point }}\n\nUna vez completado el pago, le confirmaremos su pedido a la brevedad.\n\n¡Gracias por elegir MSN Products!",
+        "additionalFields": {}
+      },
+      "id": "550e8400-e29b-41d4-a716-446655440007",
+      "name": "Enviar Link de Pago",
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1,
+      "position": [1200, 160]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "send",
+        "phoneNumberId": "WHATSAPP_PHONE_NUMBER_ID_PLACEHOLDER",
+        "recipientPhoneNumber": "={{ $('WhatsApp Trigger').item.json.entry[0].changes[0].value.contacts[0].wa_id }}",
+        "textBody": "={{ $('Agente IA Ventas').item.json.output }}",
+        "additionalFields": {}
+      },
+      "id": "550e8400-e29b-41d4-a716-446655440008",
+      "name": "Enviar Respuesta Normal",
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1,
+      "position": [960, 440]
+    }
+  ],
+  "connections": {
+    "WhatsApp Trigger": {
+      "main": [
+        [
+          {"node": "Agente IA Ventas", "type": "main", "index": 0}
+        ]
+      ]
+    },
+    "Agente IA Ventas": {
+      "main": [
+        [
+          {"node": "¿Cliente quiere comprar?", "type": "main", "index": 0}
+        ]
+      ]
+    },
+    "Claude Anthropic": {
+      "ai_languageModel": [
+        [
+          {"node": "Agente IA Ventas", "type": "ai_languageModel", "index": 0}
+        ]
+      ]
+    },
+    "Buffer Memory": {
+      "ai_memory": [
+        [
+          {"node": "Agente IA Ventas", "type": "ai_memory", "index": 0}
+        ]
+      ]
+    },
+    "¿Cliente quiere comprar?": {
+      "main": [
+        [
+          {"node": "Generar Link Mercado Pago", "type": "main", "index": 0}
+        ],
+        [
+          {"node": "Enviar Respuesta Normal", "type": "main", "index": 0}
+        ]
+      ]
+    },
+    "Generar Link Mercado Pago": {
+      "main": [
+        [
+          {"node": "Enviar Link de Pago", "type": "main", "index": 0}
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

@@ -1,0 +1,212 @@
+{
+  "name": "Bot WhatsApp MSN - Mensajes POST",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "whatsapp-msn-bot",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "id": "bbb00001-0000-0000-0000-000000000001",
+      "name": "Webhook POST",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [200, 300],
+      "webhookId": "whatsapp-msn-bot-post"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {"caseSensitive": false, "typeValidation": "loose"},
+          "conditions": [
+            {
+              "id": "guard-messages",
+              "leftValue": "={{ $json.body?.entry?.[0]?.changes?.[0]?.value?.messages?.[0]?.type }}",
+              "rightValue": "text",
+              "operator": {"type": "string", "operation": "equals"}
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "bbb00001-0000-0000-0000-000000000011",
+      "name": "Es mensaje de texto?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [420, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.groq.com/openai/v1/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {"name": "Authorization", "value": "Bearer {{$env.GROQ_API_KEY}}"},
+            {"name": "Content-Type", "value": "application/json"}
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({model:\"llama-3.3-70b-versatile\",messages:[{role:\"system\",content:\"Eres Max, asistente de ventas de MSN Products (accesorios Apple originales en Colombia).\\nTu unico objetivo: cerrar ventas de forma amigable y directa.\\n\\nREGLAS OBLIGATORIAS:\\n- Mensajes CORTOS. Maximo 3-4 lineas. Nunca mas.\\n- Usa 1-2 emojis por mensaje para generar cercania.\\n- Siempre termina con UNA sola pregunta o llamado a la accion.\\n- Nunca salgas del tema de ventas de MSN Products.\\n\\nCATALOGO (precios EXACTOS, nunca inventes otros):\\nAirPods PRO 2da gen: $80.000 - Cancelacion ruido, audio espacial, IPX4\\nAirPods MAX: $105.000 - Over-ear premium, Dolby Atmos, Corona Digital\\nAirPods Serie 4: $90.000 - Chip H2, audio adaptativo, diseno ergonomico\\nAirPods PRO 3ra gen: $90.000 - Chip H2 mejorado, ANC, audio sin perdidas\\nCable USB-C a USB-C ORIGINAL APPLE: $65.000 - 60W, nylon trenzado, 480Mbps\\nApple Watch: $165.000 - GPS, monitor cardiaco, resistente al agua\\nCabeza cargador 20W ORIGINAL APPLE: $70.000 - Carga rapida, compacto\\nCOMBO Cargador completo ORIGINAL APPLE: $120.000 - Cabeza 20W + Cable USB-C\\n\\nSOBRE EL CABLE: Solo vendemos USB-C a USB-C original Apple.\\n\\nFLUJO DE VENTA (seguir en este orden exacto):\\n1. Primer mensaje: Saludar + ofrecer catalogo: https://msn-products.vercel.app/\\n2. Consulta producto: Dar specs + precio exacto. Preguntar si lo lleva, necesita mas, o cotizaba.\\n3. Quiere comprar: Pedir OBLIGATORIAMENTE estos 3 datos (NO generar link sin ellos):\\n   a) Nombre completo\\n   b) Direccion: calle, barrio, ciudad, departamento\\n   c) Numero de telefono de contacto\\n4. Cuando el cliente haya dado los 3 datos en sus mensajes, responde EXACTAMENTE asi (primera linea de tu respuesta, sin espacios ni cambios):\\nPEDIDO_LISTO|producto=NOMBRE_DEL_PRODUCTO|precio=PRECIO_SIN_PUNTOS|nombre=NOMBRE|direccion=DIRECCION|telefono=TELEFONO\\nLuego en la siguiente linea, el mensaje normal para el cliente confirmando que generaras el link.\\n\\nPROHIBIDO: Dar precios diferentes / Generar PEDIDO_LISTO sin los 3 datos / Mensajes de mas de 4 lineas.\"},{role:\"user\",content:$('Webhook POST').item.json.body.entry[0].changes[0].value.messages[0].text.body}],temperature:0.7,max_tokens:512}) }}",
+        "options": {}
+      },
+      "id": "bbb00001-0000-0000-0000-000000000002",
+      "name": "Groq IA - Ventas",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [660, 200]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {"caseSensitive": true, "typeValidation": "loose"},
+          "conditions": [
+            {
+              "id": "cond-pedido-listo",
+              "leftValue": "={{ $json.choices[0].message.content }}",
+              "rightValue": "PEDIDO_LISTO|",
+              "operator": {"type": "string", "operation": "startsWith"}
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "bbb00001-0000-0000-0000-000000000003",
+      "name": "Datos completos?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [900, 200]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse PEDIDO_LISTO signal from Groq\nconst full = $('Groq IA - Ventas').item.json.choices[0].message.content;\nconst lines = full.split('\\n');\nconst signal = lines[0]; // PEDIDO_LISTO|producto=...|precio=...|nombre=...|direccion=...|telefono=...\nconst msgLines = lines.slice(1).join('\\n').trim();\n\n// Parse key=value pairs\nconst parts = {};\nsignal.split('|').slice(1).forEach(p => {\n  const idx = p.indexOf('=');\n  if (idx > -1) parts[p.substring(0,idx)] = p.substring(idx+1);\n});\n\nconst producto = parts.producto || 'Producto MSN Products';\nconst precio = parseInt(parts.precio) || 80000;\nconst nombre = parts.nombre || 'Cliente';\nconst direccion = parts.direccion || '';\nconst telefono = parts.telefono || '';\nconst wa_id = $('Webhook POST').item.json.body.entry[0].changes[0].value.contacts[0].wa_id;\n\nreturn [{ json: { producto, precio, nombre, direccion, telefono, wa_id, confirmMsg: msgLines } }];"
+      },
+      "id": "bbb00001-0000-0000-0000-000000000012",
+      "name": "Parsear Datos Pedido",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1140, 80]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.mercadopago.com/checkout/preferences",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {"name": "Authorization", "value": "Bearer {{$env.MP_ACCESS_TOKEN}}"},
+            {"name": "Content-Type", "value": "application/json"}
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ ({items:[{title:$json.producto,quantity:1,currency_id:'COP',unit_price:$json.precio}],payer:{name:$json.nombre},back_urls:{success:'https://msn-products.vercel.app/',failure:'https://msn-products.vercel.app/',pending:'https://msn-products.vercel.app/'},auto_return:'approved',external_reference:'MSN-'+$json.wa_id}) }}",
+        "options": {}
+      },
+      "id": "bbb00001-0000-0000-0000-000000000004",
+      "name": "Generar Link Mercado Pago",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1380, 80]
+    },
+    {
+      "parameters": {
+        "jsCode": "const datos = $('Parsear Datos Pedido').item.json;\nconst pay_link = $('Generar Link Mercado Pago').item.json.init_point;\nconst confirmMsg = datos.confirmMsg || 'Perfecto! Tu pedido esta listo.';\n\nreturn [{\n  json: {\n    messaging_product: 'whatsapp',\n    to: datos.wa_id,\n    type: 'text',\n    text: { body: confirmMsg + '\\n\\nLink de pago seguro: ' + pay_link + '\\n\\nGracias por elegir MSN Products! 🛍️' }\n  }\n}];"
+      },
+      "id": "bbb00001-0000-0000-0000-000000000009",
+      "name": "Build Pago Body",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1620, 80]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://graph.facebook.com/v19.0/1091316787388520/messages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {"name": "Authorization", "value": "Bearer {{$env.META_WA_TOKEN}}"},
+            {"name": "Content-Type", "value": "application/json"}
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json }}",
+        "options": {}
+      },
+      "id": "bbb00001-0000-0000-0000-000000000005",
+      "name": "Enviar Link de Pago",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1860, 80]
+    },
+    {
+      "parameters": {
+        "jsCode": "const webhook = $('Webhook POST').item.json;\nconst wa_id = webhook.body.entry[0].changes[0].value.contacts[0].wa_id;\nconst groqReply = $('Groq IA - Ventas').item.json.choices[0].message.content;\n// Remove any PEDIDO_LISTO signal if present\nconst lines = groqReply.split('\\n');\nconst cleanReply = lines[0].startsWith('PEDIDO_LISTO|') ? lines.slice(1).join('\\n').trim() : groqReply;\nreturn [{\n  json: {\n    messaging_product: 'whatsapp',\n    to: wa_id,\n    type: 'text',\n    text: { body: cleanReply }\n  }\n}];"
+      },
+      "id": "bbb00001-0000-0000-0000-000000000010",
+      "name": "Build Normal Body",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1140, 320]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://graph.facebook.com/v19.0/1091316787388520/messages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {"name": "Authorization", "value": "Bearer {{$env.META_WA_TOKEN}}"},
+            {"name": "Content-Type", "value": "application/json"}
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json }}",
+        "options": {}
+      },
+      "id": "bbb00001-0000-0000-0000-000000000007",
+      "name": "Enviar Respuesta Normal",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1380, 320]
+    }
+  ],
+  "connections": {
+    "Webhook POST": {
+      "main": [[{"node": "Es mensaje de texto?", "type": "main", "index": 0}]]
+    },
+    "Es mensaje de texto?": {
+      "main": [
+        [{"node": "Groq IA - Ventas", "type": "main", "index": 0}],
+        []
+      ]
+    },
+    "Groq IA - Ventas": {
+      "main": [[{"node": "Datos completos?", "type": "main", "index": 0}]]
+    },
+    "Datos completos?": {
+      "main": [
+        [{"node": "Parsear Datos Pedido", "type": "main", "index": 0}],
+        [{"node": "Build Normal Body", "type": "main", "index": 0}]
+      ]
+    },
+    "Parsear Datos Pedido": {
+      "main": [[{"node": "Generar Link Mercado Pago", "type": "main", "index": 0}]]
+    },
+    "Generar Link Mercado Pago": {
+      "main": [[{"node": "Build Pago Body", "type": "main", "index": 0}]]
+    },
+    "Build Pago Body": {
+      "main": [[{"node": "Enviar Link de Pago", "type": "main", "index": 0}]]
+    },
+    "Build Normal Body": {
+      "main": [[{"node": "Enviar Respuesta Normal", "type": "main", "index": 0}]]
+    }
+  },
+  "settings": {"executionOrder": "v1"}
+}

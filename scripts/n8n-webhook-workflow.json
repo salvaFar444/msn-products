@@ -1,0 +1,215 @@
+{
+  "name": "Bot Ventas WhatsApp - MSN Products",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "ALL",
+        "path": "whatsapp-msn-bot",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "aaa00001-0000-0000-0000-000000000001",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [200, 300],
+      "webhookId": "whatsapp-msn-bot"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {"caseSensitive": false, "typeValidation": "loose"},
+          "conditions": [
+            {
+              "id": "cond-is-verification",
+              "leftValue": "={{ $json.query['hub.mode'] }}",
+              "rightValue": "subscribe",
+              "operator": {"type": "string", "operation": "equals"}
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "aaa00001-0000-0000-0000-000000000002",
+      "name": "Es verificacion Meta",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [440, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "={{ $('Webhook').item.json.query['hub.challenge'] }}",
+        "options": {"responseCode": 200}
+      },
+      "id": "aaa00001-0000-0000-0000-000000000003",
+      "name": "Responder Challenge",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [680, 160]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.groq.com/openai/v1/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {"name": "Authorization", "value": "Bearer {{$env.GROQ_API_KEY}}"},
+            {"name": "Content-Type", "value": "application/json"}
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ ({\"model\":\"llama3-70b-8192\",\"messages\":[{\"role\":\"system\",\"content\":\"Eres un asistente de ventas formal y profesional de MSN Products. Tu unico objetivo es ayudar al cliente a elegir productos del catalogo disponible en https://msn-products.vercel.app/ y cerrar la venta. Si es el primer mensaje del cliente, saludalo formalmente y ofrece el catalogo con el link. Responde dudas sobre productos. Cuando el cliente confirme que quiere comprar, extrae el nombre del producto y precio, y avisa que generaras el link de pago. Mantente siempre formal y profesional. Nunca salgas del tema de ventas.\"},{\"role\":\"user\",\"content\":$('Webhook').item.json.body.entry[0].changes[0].value.messages[0].text.body}],\"temperature\":0.7,\"max_tokens\":1024}) }}",
+        "options": {}
+      },
+      "id": "aaa00001-0000-0000-0000-000000000004",
+      "name": "Groq IA - Ventas",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [680, 440]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {"caseSensitive": false, "typeValidation": "loose"},
+          "conditions": [
+            {
+              "id": "cond-purchase",
+              "leftValue": "={{ $('Webhook').item.json.body.entry[0].changes[0].value.messages[0].text.body }}",
+              "rightValue": "quiero|comprar|llevar|pagar|precio|cuanto cuesta|me lo llevo|quiero uno|quiero una",
+              "operator": {"type": "string", "operation": "regex"}
+            }
+          ],
+          "combinator": "or"
+        }
+      },
+      "id": "aaa00001-0000-0000-0000-000000000005",
+      "name": "Cliente quiere comprar",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [920, 440]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.mercadopago.com/checkout/preferences",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {"name": "Authorization", "value": "Bearer {{$env.MP_ACCESS_TOKEN}}"},
+            {"name": "Content-Type", "value": "application/json"}
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\"items\":[{\"title\":\"Producto MSN Products\",\"quantity\":1,\"currency_id\":\"ARS\",\"unit_price\":100}],\"payer\":{\"name\":\"Cliente MSN Products\"},\"back_urls\":{\"success\":\"https://msn-products.vercel.app/\",\"failure\":\"https://msn-products.vercel.app/\",\"pending\":\"https://msn-products.vercel.app/\"},\"auto_return\":\"approved\"}",
+        "options": {}
+      },
+      "id": "aaa00001-0000-0000-0000-000000000006",
+      "name": "Generar Link Mercado Pago",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1160, 320]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://graph.facebook.com/v19.0/1015502354984714/messages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {"name": "Authorization", "value": "Bearer {{$env.META_WA_TOKEN}}"},
+            {"name": "Content-Type", "value": "application/json"}
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ ({\"messaging_product\":\"whatsapp\",\"to\":$('Webhook').item.json.body.entry[0].changes[0].value.contacts[0].wa_id,\"type\":\"text\",\"text\":{\"body\":\"Estimado/a cliente, hemos generado su enlace de pago seguro:\\n\\n\" + $('Generar Link Mercado Pago').item.json.init_point + \"\\n\\nUna vez completado el pago le confirmaremos su pedido. Gracias por elegir MSN Products!\"}}) }}",
+        "options": {}
+      },
+      "id": "aaa00001-0000-0000-0000-000000000007",
+      "name": "Enviar Link de Pago",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1400, 320]
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "OK",
+        "options": {"responseCode": 200}
+      },
+      "id": "aaa00001-0000-0000-0000-000000000008",
+      "name": "Responder OK (pago)",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1640, 320]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://graph.facebook.com/v19.0/1015502354984714/messages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {"name": "Authorization", "value": "Bearer {{$env.META_WA_TOKEN}}"},
+            {"name": "Content-Type", "value": "application/json"}
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ ({\"messaging_product\":\"whatsapp\",\"to\":$('Webhook').item.json.body.entry[0].changes[0].value.contacts[0].wa_id,\"type\":\"text\",\"text\":{\"body\":$('Groq IA - Ventas').item.json.choices[0].message.content}}) }}",
+        "options": {}
+      },
+      "id": "aaa00001-0000-0000-0000-000000000009",
+      "name": "Enviar Respuesta Normal",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1160, 560]
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "OK",
+        "options": {"responseCode": 200}
+      },
+      "id": "aaa00001-0000-0000-0000-000000000010",
+      "name": "Responder OK (normal)",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1400, 560]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [[{"node": "Es verificacion Meta", "type": "main", "index": 0}]]
+    },
+    "Es verificacion Meta": {
+      "main": [
+        [{"node": "Responder Challenge", "type": "main", "index": 0}],
+        [{"node": "Groq IA - Ventas", "type": "main", "index": 0}]
+      ]
+    },
+    "Groq IA - Ventas": {
+      "main": [[{"node": "Cliente quiere comprar", "type": "main", "index": 0}]]
+    },
+    "Cliente quiere comprar": {
+      "main": [
+        [{"node": "Generar Link Mercado Pago", "type": "main", "index": 0}],
+        [{"node": "Enviar Respuesta Normal", "type": "main", "index": 0}]
+      ]
+    },
+    "Generar Link Mercado Pago": {
+      "main": [[{"node": "Enviar Link de Pago", "type": "main", "index": 0}]]
+    },
+    "Enviar Link de Pago": {
+      "main": [[{"node": "Responder OK (pago)", "type": "main", "index": 0}]]
+    },
+    "Enviar Respuesta Normal": {
+      "main": [[{"node": "Responder OK (normal)", "type": "main", "index": 0}]]
+    }
+  },
+  "settings": {"executionOrder": "v1"}
+}

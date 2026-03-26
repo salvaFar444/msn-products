@@ -5,7 +5,7 @@ export const SITE_URL = process.env.NEXTAUTH_URL ?? 'http://localhost:3000'
 
 // WhatsApp — reads from env, falls back to placeholder
 export const WHATSAPP_NUMBER =
-  process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? '573001234567'
+  process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? '573215009685'
 
 export const WHATSAPP_URL = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(
   'Hola MSN Products, quiero hacer un pedido 🛍️'

@@ -9,38 +9,43 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // ── Light theme (public store) ──────────────────────────
-        background: '#FFFFFF',
-        surface: '#F5F5F7',
-        'surface-raised': '#EBEBED',
-        primary: '#1D1D1F',
-        // ── Accent (unchanged) ──────────────────────────────────
-        accent: '#0066FF',
-        'accent-hover': '#0052CC',
-        'accent-muted': 'rgba(0, 102, 255, 0.10)',
-        // ── Borders & text (light) ───────────────────────────────
-        border: 'rgba(0, 0, 0, 0.08)',
-        'border-strong': 'rgba(0, 0, 0, 0.15)',
-        muted: 'rgba(0, 0, 0, 0.5)',
-        'muted-low': 'rgba(0, 0, 0, 0.35)',
-        // ── Status ───────────────────────────────────────────────
+        // ── Dark luxury palette ─────────────────────────────────────
+        background: '#0A0A0A',
+        surface: '#111111',
+        'surface-raised': '#1A1A1A',
+        primary: '#FFFFFF',
+        // ── Accent ──────────────────────────────────────────────────
+        accent: '#FFFFFF',
+        'accent-hover': 'rgba(255,255,255,0.88)',
+        'accent-muted': 'rgba(255,255,255,0.06)',
+        // ── Borders & text ──────────────────────────────────────────
+        border: 'rgba(255,255,255,0.08)',
+        'border-strong': 'rgba(255,255,255,0.18)',
+        muted: '#888888',
+        'muted-low': 'rgba(255,255,255,0.30)',
+        // ── Gold premium ────────────────────────────────────────────
+        gold: '#C9A84C',
+        'gold-muted': 'rgba(201,168,76,0.12)',
+        // ── Status ──────────────────────────────────────────────────
         success: '#22C55E',
         warning: '#F59E0B',
-        danger: '#EF4444',
+        danger: '#FF3B30',
         whatsapp: '#25D366',
         nequi: '#8347AD',
       },
       fontFamily: {
-        sans: ['var(--font-space)', 'system-ui', '-apple-system', 'sans-serif'],
+        sans: ['var(--font-dm-sans)', 'system-ui', '-apple-system', 'sans-serif'],
+        serif: ['var(--font-playfair)', 'Georgia', 'Cambria', 'serif'],
         mono: ['ui-monospace', 'monospace'],
       },
       animation: {
         'slide-in-right': 'slideInRight 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-        'fade-up': 'fadeUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards',
+        'fade-up': 'fadeUp 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards',
         'fade-in': 'fadeIn 0.4s ease-out forwards',
         'scale-in': 'scaleIn 0.2s ease-out',
-        'spin-slow': 'spin 2s linear infinite',
-        marquee: 'marquee 28s linear infinite',
+        marquee: 'marquee 30s linear infinite',
+        'pulse-slow': 'pulseSlow 3s ease-in-out infinite',
+        'reveal': 'reveal 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards',
       },
       keyframes: {
         slideInRight: {
@@ -48,7 +53,7 @@ const config: Config = {
           to: { transform: 'translateX(0)' },
         },
         fadeUp: {
-          from: { opacity: '0', transform: 'translateY(24px)' },
+          from: { opacity: '0', transform: 'translateY(28px)' },
           to: { opacity: '1', transform: 'translateY(0)' },
         },
         fadeIn: {
@@ -63,11 +68,19 @@ const config: Config = {
           from: { transform: 'translateX(0)' },
           to: { transform: 'translateX(-50%)' },
         },
+        pulseSlow: {
+          '0%, 100%': { transform: 'scale(1)', boxShadow: '0 0 0 0 rgba(37,211,102,0.4)' },
+          '50%': { transform: 'scale(1.05)', boxShadow: '0 0 0 12px rgba(37,211,102,0)' },
+        },
+        reveal: {
+          from: { opacity: '0', transform: 'translateY(32px)' },
+          to: { opacity: '1', transform: 'translateY(0)' },
+        },
       },
       backgroundImage: {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
-        'gradient-hero':
-          'radial-gradient(ellipse 80% 60% at 50% -5%, rgba(0, 102, 255, 0.07), transparent)',
+        'gradient-gold': 'radial-gradient(ellipse 70% 50% at 50% -10%, rgba(201,168,76,0.15), transparent)',
+        'gradient-hero': 'radial-gradient(ellipse 80% 60% at 50% -5%, rgba(201,168,76,0.08), transparent)',
       },
     },
   },

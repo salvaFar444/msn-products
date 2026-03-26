@@ -2,35 +2,35 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ─── CSS Custom Properties — Light (public store) ──────────────── */
+/* ─── CSS Custom Properties — Dark luxury ────────────────────────── */
 :root {
-  --color-bg: #FFFFFF;
-  --color-surface: #F5F5F7;
-  --color-surface-raised: #EBEBED;
-  --color-accent: #0066FF;
-  --color-accent-hover: #0052CC;
-  --color-text: #1D1D1F;
-  --color-muted: rgba(0, 0, 0, 0.5);
-  --color-muted-low: rgba(0, 0, 0, 0.35);
-  --color-border: rgba(0, 0, 0, 0.08);
-  --color-border-strong: rgba(0, 0, 0, 0.15);
-  --radius-card: 16px;
-  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06), 0 4px 16px rgba(0, 0, 0, 0.08);
-  --shadow-elevated: 0 20px 48px rgba(0, 0, 0, 0.12);
+  --color-bg: #0A0A0A;
+  --color-surface: #111111;
+  --color-surface-raised: #1A1A1A;
+  --color-text: #FFFFFF;
+  --color-muted: #888888;
+  --color-muted-low: rgba(255,255,255,0.30);
+  --color-border: rgba(255,255,255,0.08);
+  --color-border-strong: rgba(255,255,255,0.18);
+  --color-gold: #C9A84C;
+  --color-accent: #FFFFFF;
+  --radius-card: 12px;
+  --shadow-card: 0 1px 3px rgba(0,0,0,0.5), 0 4px 20px rgba(0,0,0,0.4);
+  --shadow-elevated: 0 20px 60px rgba(0,0,0,0.7);
 }
 
-/* ─── Admin dark scope — restores dark values for /admin/* ──────── */
+/* ─── Admin dark scope (kept for consistency) ───────────────────── */
 .admin-dark {
   --color-bg: #0A0A0A;
   --color-surface: #1A1A1A;
   --color-surface-raised: #242424;
   --color-text: #FFFFFF;
-  --color-muted: rgba(255, 255, 255, 0.5);
-  --color-muted-low: rgba(255, 255, 255, 0.3);
-  --color-border: rgba(255, 255, 255, 0.08);
-  --color-border-strong: rgba(255, 255, 255, 0.15);
-  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.4), 0 4px 16px rgba(0, 0, 0, 0.3);
-  --shadow-elevated: 0 8px 32px rgba(0, 0, 0, 0.6);
+  --color-muted: rgba(255,255,255,0.5);
+  --color-muted-low: rgba(255,255,255,0.3);
+  --color-border: rgba(255,255,255,0.08);
+  --color-border-strong: rgba(255,255,255,0.15);
+  --shadow-card: 0 1px 3px rgba(0,0,0,0.4), 0 4px 16px rgba(0,0,0,0.3);
+  --shadow-elevated: 0 8px 32px rgba(0,0,0,0.6);
 }
 
 /* ─── Base Reset ─────────────────────────────────────────────────── */
@@ -47,8 +47,8 @@ html {
 }
 
 body {
-  background-color: var(--color-bg);
-  color: var(--color-text);
+  background-color: #0A0A0A;
+  color: #FFFFFF;
   min-height: 100vh;
   overflow-x: hidden;
 }
@@ -57,56 +57,70 @@ body.cart-open {
   overflow: hidden;
 }
 
-/* ─── Custom Scrollbar ───────────────────────────────────────────── */
+/* ─── Custom Scrollbar — slim dark ──────────────────────────────── */
 ::-webkit-scrollbar {
-  width: 4px;
-  height: 4px;
+  width: 3px;
+  height: 3px;
 }
 ::-webkit-scrollbar-track {
-  background: #F5F5F7;
+  background: #0A0A0A;
 }
 ::-webkit-scrollbar-thumb {
-  background: #C7C7CC;
+  background: #333333;
   border-radius: 2px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #AEAEB2;
+  background: #C9A84C;
 }
 
-/* ─── Selection ──────────────────────────────────────────────────── */
+/* ─── Selection — gold ───────────────────────────────────────────── */
 ::selection {
-  background-color: rgba(0, 102, 255, 0.12);
-  color: #1D1D1F;
+  background-color: rgba(201,168,76,0.25);
+  color: #FFFFFF;
 }
 
 /* ─── Focus Ring ─────────────────────────────────────────────────── */
 :focus-visible {
-  outline: 2px solid #0066FF;
-  outline-offset: 2px;
+  outline: 1.5px solid #C9A84C;
+  outline-offset: 3px;
   border-radius: 4px;
+}
+
+/* ─── Noise texture overlay ─────────────────────────────────────── */
+.noise-overlay::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  pointer-events: none;
+  z-index: 0;
 }
 
 /* ─── Utility Classes ────────────────────────────────────────────── */
 @layer utilities {
-  .text-gradient {
-    background: linear-gradient(135deg, #1D1D1F 0%, rgba(29, 29, 31, 0.65) 100%);
+  .font-serif-display {
+    font-family: var(--font-playfair), Georgia, serif;
+  }
+
+  .text-gradient-gold {
+    background: linear-gradient(135deg, #C9A84C 0%, #E8C97A 50%, #C9A84C 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
 
-  .text-gradient-accent {
-    background: linear-gradient(135deg, #0066FF 0%, #00AAFF 100%);
+  .text-gradient-white {
+    background: linear-gradient(135deg, #FFFFFF 0%, rgba(255,255,255,0.7) 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
 
-  /* CSS-var-based utilities: auto-adapt to light/dark via CSS scope */
   .glass {
-    background: rgba(255, 255, 255, 0.75);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    background: rgba(17,17,17,0.8);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
     border: 1px solid var(--color-border);
   }
 
@@ -118,19 +132,35 @@ body.cart-open {
   }
 
   .card-hover {
-    transition: transform 0.3s ease-out, border-color 0.3s ease-out, box-shadow 0.3s ease-out;
+    transition: transform 0.35s cubic-bezier(0.22,1,0.36,1),
+                border-color 0.3s ease,
+                box-shadow 0.35s cubic-bezier(0.22,1,0.36,1);
   }
 
   .card-hover:hover {
-    transform: translateY(-4px);
+    transform: translateY(-5px);
     border-color: var(--color-border-strong);
-    box-shadow: var(--shadow-elevated);
+    box-shadow: 0 24px 60px rgba(0,0,0,0.6);
+  }
+
+  /* Scroll-reveal — add via IntersectionObserver JS */
+  .reveal {
+    opacity: 0;
+    transform: translateY(32px);
+    transition: opacity 0.7s cubic-bezier(0.22,1,0.36,1),
+                transform 0.7s cubic-bezier(0.22,1,0.36,1);
+  }
+
+  .reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
   }
 
   .animate-stagger-1 { animation-delay: 0ms; }
   .animate-stagger-2 { animation-delay: 100ms; }
   .animate-stagger-3 { animation-delay: 200ms; }
   .animate-stagger-4 { animation-delay: 300ms; }
+  .animate-stagger-5 { animation-delay: 400ms; }
 }
 
 /* ─── Admin Layout ───────────────────────────────────────────────── */
