@@ -1,9 +1,45 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import ImageUploader from './ImageUploader'
+import MediaList from './MediaList'
 import type { Product, ProductFormData, ProductCategory } from '@/types'
+
+// Format an ISO timestamp (or undefined) into a human-readable
+// "16 abr 2026, 10:14 a. m." style string in Colombia timezone.
+function formatUpdatedAt(iso: string | undefined): string | null {
+  if (!iso) return null
+  try {
+    return new Date(iso).toLocaleString('es-CO', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true,
+    })
+  } catch {
+    return null
+  }
+}
+
+// Build the initial ProductFormData from a Product (or blank).
+// Extracted so useEffect can re-sync when the incoming product changes.
+function buildInitialForm(product?: Product): ProductFormData {
+  return {
+    name: product?.name ?? '',
+    shortName: product?.shortName ?? '',
+    category: product?.category ?? 'Audio',
+    price: product?.price ?? 0,
+    description: product?.description ?? '',
+    stock: product?.stock ?? 0,
+    badge: product?.badge ?? '',
+    features: product?.features ?? [''],
+    imageUrl: product?.image,
+    imageFile: undefined,
+  }
+}
 
 const CATEGORIES: ProductCategory[] = ['Audio', 'Wearables', 'Cables', 'Cargadores']
 
@@ -33,24 +69,25 @@ export default function ProductForm({ product, onSubmit }: ProductFormProps) {
   const router = useRouter()
   const uploadPath = useUploadPath(product?.id)
   const [loading, setLoading] = useState(false)
+  const [saved, setSaved] = useState(false)
   const [serverError, setServerError] = useState<string | null>(null)
 
-  const [form, setForm] = useState<ProductFormData>({
-    name: product?.name ?? '',
-    shortName: product?.shortName ?? '',
-    category: product?.category ?? 'Audio',
-    price: product?.price ?? 0,
-    description: product?.description ?? '',
-    stock: product?.stock ?? 0,
-    badge: product?.badge ?? '',
-    features: product?.features ?? [''],
-    imageUrl: product?.image,
-    imageFile: undefined,
-  })
+  const [form, setForm] = useState<ProductFormData>(() => buildInitialForm(product))
+
+  // Re-sync local state when the incoming product identity changes. Without
+  // this, navigating from /admin/products/A/edit to /admin/products/B/edit
+  // would keep stale form values because useState initializers only run once.
+  useEffect(() => {
+    setForm(buildInitialForm(product))
+    setServerError(null)
+    setSaved(false)
+  }, [product?.id])
 
   const setField = <K extends keyof ProductFormData>(key: K, value: ProductFormData[K]) => {
     setForm((f) => ({ ...f, [key]: value }))
   }
+
+  const updatedAtLabel = formatUpdatedAt(product?.updatedAt)
 
   const updateFeature = (index: number, value: string) => {
     const updated = [...form.features]
@@ -66,6 +103,7 @@ export default function ProductForm({ product, onSubmit }: ProductFormProps) {
     e.preventDefault()
     setLoading(true)
     setServerError(null)
+    setSaved(false)
 
     try {
       const cleanedFeatures = form.features.filter((f) => f.trim() !== '')
@@ -81,16 +119,33 @@ export default function ProductForm({ product, onSubmit }: ProductFormProps) {
         resolvedImageUrl = uploaded
       }
 
-      const result = await onSubmit({
+      const payload: ProductFormData = {
         ...form,
         features: cleanedFeatures,
         imageFile: undefined,       // never send File to server action
         imageUrl: resolvedImageUrl,
-      })
+      }
+
+      const result = await onSubmit(payload)
 
       if (result.success) {
-        router.push('/admin/products')
-        router.refresh()
+        // Visual + console confirmation BEFORE navigation so the admin can
+        // actually see "Guardado" and confirm the update happened.
+        console.log('[ADMIN] Product updated:', {
+          id: product?.id,
+          name: payload.name,
+          price: payload.price,
+          stock: payload.stock,
+          at: new Date().toISOString(),
+        })
+        setSaved(true)
+        setLoading(false)
+        // Give the admin ~1.4s to read the banner, then navigate.
+        setTimeout(() => {
+          router.push('/admin/products')
+          router.refresh()
+        }, 1400)
+        return
       } else {
         setServerError(result.error ?? 'Error desconocido al guardar.')
       }
@@ -98,7 +153,9 @@ export default function ProductForm({ product, onSubmit }: ProductFormProps) {
       console.error('[ProductForm] handleSubmit error:', err)
       setServerError('Error inesperado. Verifica tu conexión e intenta de nuevo.')
     } finally {
-      setLoading(false)
+      // Only clear loading on the error path — the success path handled it
+      // before setTimeout so the button doesn't spin during the 1.4s delay.
+      if (!saved) setLoading(false)
     }
   }
 
@@ -113,6 +170,26 @@ export default function ProductForm({ product, onSubmit }: ProductFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
+      {saved && (
+        <div
+          className="flex items-center gap-2 rounded-xl px-4 py-3 text-sm"
+          style={{
+            backgroundColor: 'rgba(34,197,94,0.1)',
+            border: '1px solid rgba(34,197,94,0.35)',
+            color: '#86EFAC',
+          }}
+          role="status"
+          aria-live="polite"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.2} stroke="currentColor" className="h-4 w-4" aria-hidden="true">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+          </svg>
+          <span>
+            {product ? 'Producto actualizado correctamente.' : 'Producto creado correctamente.'} Redirigiendo…
+          </span>
+        </div>
+      )}
+
       {serverError && (
         <div
           className="rounded-xl px-4 py-3 text-sm"
@@ -121,9 +198,16 @@ export default function ProductForm({ product, onSubmit }: ProductFormProps) {
             border: '1px solid rgba(220,38,38,0.3)',
             color: '#FCA5A5',
           }}
+          role="alert"
         >
           {serverError}
         </div>
+      )}
+
+      {updatedAtLabel && (
+        <p className="-mt-2 text-xs text-white/45">
+          Última actualización: <span className="text-white/70">{updatedAtLabel}</span>
+        </p>
       )}
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
@@ -228,13 +312,20 @@ export default function ProductForm({ product, onSubmit }: ProductFormProps) {
 
         {/* Right column */}
         <div className="space-y-5">
-          <ImageUploader
-            currentUrl={form.imageUrl}
-            onChange={(file) => {
-              setField('imageFile', file ?? undefined)
-              if (!file) setField('imageUrl', undefined)
-            }}
-          />
+          {product ? (
+            // Edit mode: full gallery (photos + videos) with drag-to-reorder
+            <MediaList productId={product.id} initial={product.media ?? []} />
+          ) : (
+            // New mode: single image is enough to create the product; once
+            // it exists the admin can switch to full gallery in edit mode.
+            <ImageUploader
+              currentUrl={form.imageUrl}
+              onChange={(file) => {
+                setField('imageFile', file ?? undefined)
+                if (!file) setField('imageUrl', undefined)
+              }}
+            />
+          )}
 
           {/* Features */}
           <div>
@@ -285,13 +376,14 @@ export default function ProductForm({ product, onSubmit }: ProductFormProps) {
         <button
           type="button"
           onClick={() => router.back()}
-          className="rounded-xl border border-white/10 bg-[#1A1A1A] px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-white/5"
+          disabled={loading || saved}
+          className="rounded-xl border border-white/10 bg-[#1A1A1A] px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-40"
         >
           Cancelar
         </button>
         <button
           type="submit"
-          disabled={loading}
+          disabled={loading || saved}
           className="flex items-center gap-2 rounded-xl bg-[#E87A00] px-6 py-2.5 text-sm font-semibold text-white shadow-lg transition-colors hover:bg-[#C96700] disabled:cursor-not-allowed disabled:opacity-50"
           style={{ boxShadow: '0 10px 28px rgba(232,122,0,0.28)' }}
         >
@@ -301,7 +393,13 @@ export default function ProductForm({ product, onSubmit }: ProductFormProps) {
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
             </svg>
           )}
-          {loading ? 'Guardando...' : product ? 'Actualizar producto' : 'Crear producto'}
+          {saved
+            ? 'Guardado ✓'
+            : loading
+              ? 'Guardando...'
+              : product
+                ? 'Actualizar producto'
+                : 'Crear producto'}
         </button>
       </div>
     </form>

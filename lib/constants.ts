@@ -9,8 +9,12 @@ export { WHATSAPP_URL } from '@/data/site'
 
 // Supabase Storage
 export const SUPABASE_BUCKET = 'product-images'
+export const SUPABASE_VIDEO_BUCKET = 'product-videos'
 export const MAX_IMAGE_SIZE_MB = 5
+export const MAX_VIDEO_SIZE_MB = 20
+export const MAX_MEDIA_PER_PRODUCT = 10
 export const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp']
+export const ALLOWED_VIDEO_TYPES = ['video/mp4', 'video/webm']
 
 // Cart
 export const CART_STORAGE_KEY = 'msn-cart-storage'

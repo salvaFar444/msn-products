@@ -2,17 +2,46 @@
 
 export type ProductCategory = 'Audio' | 'Wearables' | 'Cables' | 'Cargadores'
 
+export type MediaType = 'image' | 'video'
+
+export interface ProductMedia {
+  id: string
+  productId: string
+  url: string
+  mediaType: MediaType
+  position: number
+  isPrimary: boolean
+  createdAt: string
+}
+
+export interface ProductReview {
+  id: string
+  productId: string
+  authorName: string
+  authorCity: string | null
+  rating: 1 | 2 | 3 | 4 | 5
+  comment: string
+  isVerified: boolean
+  createdAt: string
+}
+
 export interface Product {
   id: string
+  slug: string
   name: string
   shortName: string
   category: ProductCategory
   price: number // COP integer, no decimals
   description: string
-  image: string // Supabase Storage URL or '/img.jpg' fallback
-  badge?: string // e.g. 'Más vendido', 'Nuevo'
-  stock: number // 0 = Agotado
+  longDescription?: string
+  specs?: Record<string, string>
+  image: string // Primary image URL — cached from product_media for listing cards
+  badge?: string
+  stock: number
   features: string[]
+  media?: ProductMedia[] // loaded only for detail views
+  hasVideo?: boolean // derived flag — true if media contains at least one video
+  updatedAt?: string // ISO timestamp — shown in admin form for confirmation
 }
 
 export function isInStock(product: Product): boolean {
@@ -61,22 +90,32 @@ export interface ProductFormData {
   category: ProductCategory
   price: number
   description: string
+  longDescription?: string
+  specs?: Record<string, string>
   stock: number
   badge: string
   features: string[]
-  imageFile?: File
+  // Legacy single-image fields — still used by ProductForm until the MediaList
+  // integration (Task 1) is finished. MediaList will replace them.
   imageUrl?: string
+  imageFile?: File
+  // Local draft media list — mixed existing rows and pending uploads.
+  // Managed by MediaList; server sync happens via /api/admin/media.
+  media?: ProductMedia[]
 }
 
 // ─── Supabase DB Row Types ────────────────────────────────────────
 
 export interface ProductRow {
   id: string
+  slug: string | null
   name: string
   short_name: string
   category: string
   price: number
   description: string | null
+  long_description: string | null
+  specs: Record<string, string> | null
   image_url: string | null
   badge: string | null
   stock: number
@@ -85,18 +124,77 @@ export interface ProductRow {
   updated_at: string
 }
 
-// Maps a Supabase row to our Product interface
-export function rowToProduct(row: ProductRow): Product {
+export interface ProductMediaRow {
+  id: string
+  product_id: string
+  url: string
+  media_type: 'image' | 'video'
+  position: number
+  is_primary: boolean
+  created_at: string
+}
+
+export interface ProductReviewRow {
+  id: string
+  product_id: string
+  author_name: string
+  author_city: string | null
+  rating: number
+  comment: string
+  is_verified: boolean
+  created_at: string
+}
+
+// ─── Row → Domain mappers ────────────────────────────────────────
+
+export function rowToProduct(
+  row: ProductRow,
+  media?: ProductMediaRow[]
+): Product {
+  const mappedMedia = media?.map(rowToProductMedia) ?? []
+  const primary = mappedMedia.find((m) => m.isPrimary && m.mediaType === 'image')
+
   return {
     id: row.id,
+    slug: row.slug ?? row.id, // fallback to id if slug not yet generated
     name: row.name,
     shortName: row.short_name,
     category: row.category as ProductCategory,
     price: row.price,
     description: row.description ?? '',
-    image: row.image_url ?? '/img.jpg',
+    longDescription: row.long_description ?? undefined,
+    specs: row.specs ?? undefined,
+    image: primary?.url ?? row.image_url ?? '/img.jpg',
     badge: row.badge ?? undefined,
     stock: row.stock,
     features: row.features ?? [],
+    media: mappedMedia.length > 0 ? mappedMedia : undefined,
+    hasVideo: mappedMedia.some((m) => m.mediaType === 'video'),
+    updatedAt: row.updated_at,
+  }
+}
+
+export function rowToProductMedia(row: ProductMediaRow): ProductMedia {
+  return {
+    id: row.id,
+    productId: row.product_id,
+    url: row.url,
+    mediaType: row.media_type,
+    position: row.position,
+    isPrimary: row.is_primary,
+    createdAt: row.created_at,
+  }
+}
+
+export function rowToProductReview(row: ProductReviewRow): ProductReview {
+  return {
+    id: row.id,
+    productId: row.product_id,
+    authorName: row.author_name,
+    authorCity: row.author_city,
+    rating: row.rating as 1 | 2 | 3 | 4 | 5,
+    comment: row.comment,
+    isVerified: row.is_verified,
+    createdAt: row.created_at,
   }
 }
