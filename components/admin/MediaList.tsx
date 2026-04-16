@@ -19,7 +19,9 @@ import {
   arrayMove,
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
+import { X, Star, Video as VideoIcon, GripVertical } from 'lucide-react'
 import MediaUploader from './MediaUploader'
+import { MAX_MEDIA_PER_PRODUCT } from '@/lib/constants'
 import type { ProductMedia, MediaType } from '@/types'
 
 interface MediaListProps {
@@ -54,108 +56,94 @@ function SortableCard({
     <div
       ref={setNodeRef}
       style={style}
-      className="relative flex flex-col overflow-hidden rounded-xl border"
+      className="group relative aspect-square overflow-hidden rounded-xl"
     >
+      {/* Media */}
       <div
-        className="relative aspect-square w-full"
-        style={{
-          backgroundColor: '#0A0A0A',
-          borderColor: 'rgba(255,255,255,0.1)',
-        }}
+        className="absolute inset-0"
+        style={{ backgroundColor: '#0A0A0A', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '0.75rem' }}
       >
         {isImage ? (
-          <Image
-            src={media.url}
-            alt="media"
-            fill
-            sizes="160px"
-            className="object-contain"
-          />
+          <Image src={media.url} alt="" fill sizes="160px" className="object-contain" />
         ) : (
           <video
             src={media.url}
-            className="h-full w-full object-contain"
+            className="h-full w-full object-cover"
             muted
             playsInline
             preload="metadata"
           />
         )}
-
-        {/* Drag handle (top-left) */}
-        <button
-          type="button"
-          className="absolute left-1.5 top-1.5 flex h-7 w-7 items-center justify-center rounded-lg bg-black/60 text-white/80 backdrop-blur-sm transition-colors hover:bg-black/80"
-          aria-label="Arrastrar para reordenar"
-          {...attributes}
-          {...listeners}
-          style={{ cursor: 'grab', touchAction: 'none' }}
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4" aria-hidden="true">
-            <path d="M9 5h2v2H9V5Zm0 6h2v2H9v-2Zm0 6h2v2H9v-2Zm4-12h2v2h-2V5Zm0 6h2v2h-2v-2Zm0 6h2v2h-2v-2Z" />
-          </svg>
-        </button>
-
-        {/* Type badge (top-right) */}
-        <span
-          className="absolute right-1.5 top-1.5 rounded-md px-1.5 py-0.5 text-[10px] font-semibold uppercase"
-          style={{
-            backgroundColor: isImage ? 'rgba(59,130,246,0.9)' : 'rgba(232,122,0,0.9)',
-            color: '#FFFFFF',
-          }}
-        >
-          {isImage ? 'IMG' : 'VIDEO'}
-        </span>
-
-        {media.isPrimary && isImage && (
-          <span
-            className="absolute bottom-1.5 left-1.5 flex items-center gap-1 rounded-md bg-[#E87A00] px-1.5 py-0.5 text-[10px] font-semibold text-white"
-            aria-label="Imagen principal"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-2.5 w-2.5" aria-hidden="true">
-              <path d="M11.48 3.5a.56.56 0 0 1 1.04 0l2.18 5.3 5.72.45a.56.56 0 0 1 .32.98l-4.36 3.73 1.32 5.57a.56.56 0 0 1-.84.61L12 17.23l-4.86 2.91a.56.56 0 0 1-.84-.61l1.32-5.57L3.26 10.23a.56.56 0 0 1 .32-.98l5.72-.45 2.18-5.3Z" />
-            </svg>
-            Principal
-          </span>
-        )}
       </div>
 
-      <div
-        className="flex items-center justify-between gap-2 px-2 py-1.5"
-        style={{ backgroundColor: '#141414', borderTop: '1px solid rgba(255,255,255,0.06)' }}
+      {/* Delete — X in top-right */}
+      <button
+        type="button"
+        disabled={rowBusy}
+        onClick={(e) => {
+          e.stopPropagation()
+          if (confirm('¿Eliminar este archivo?')) onDelete(media.id)
+        }}
+        aria-label="Eliminar archivo"
+        className="absolute right-1.5 top-1.5 z-20 flex h-7 w-7 items-center justify-center rounded-full bg-black/70 text-white backdrop-blur-sm transition-all hover:bg-red-500 disabled:cursor-not-allowed disabled:opacity-40"
       >
-        {isImage ? (
-          <button
-            type="button"
-            disabled={media.isPrimary || rowBusy}
-            onClick={() => onSetPrimary(media.id)}
-            className="text-[11px] font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-40"
-            style={{ color: media.isPrimary ? '#E87A00' : 'rgba(255,255,255,0.65)' }}
-          >
-            {media.isPrimary ? '★ Principal' : 'Marcar como principal'}
-          </button>
-        ) : (
-          <span className="text-[11px]" style={{ color: 'rgba(255,255,255,0.45)' }}>
-            Video
-          </span>
-        )}
+        <X className="h-3.5 w-3.5" strokeWidth={2.5} aria-hidden="true" />
+      </button>
 
+      {/* Drag handle — top-left */}
+      <button
+        type="button"
+        aria-label="Arrastrar para reordenar"
+        {...attributes}
+        {...listeners}
+        style={{ cursor: 'grab', touchAction: 'none' }}
+        className="absolute left-1.5 top-1.5 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-black/60 text-white/80 backdrop-blur-sm transition-colors hover:bg-black/80"
+      >
+        <GripVertical className="h-3.5 w-3.5" aria-hidden="true" />
+      </button>
+
+      {/* Video indicator — bottom-right */}
+      {!isImage && (
+        <span
+          className="absolute bottom-1.5 right-1.5 flex items-center gap-1 rounded-md bg-black/70 px-1.5 py-0.5 text-[9px] font-bold uppercase text-white backdrop-blur-sm"
+          aria-label="Video"
+        >
+          <VideoIcon className="h-2.5 w-2.5" aria-hidden="true" strokeWidth={2.5} />
+          Video
+        </span>
+      )}
+
+      {/* Primary toggle — bottom-left (images only) */}
+      {isImage && (
         <button
           type="button"
           disabled={rowBusy}
-          onClick={() => {
-            if (confirm('¿Eliminar este archivo?')) onDelete(media.id)
+          onClick={(e) => {
+            e.stopPropagation()
+            if (!media.isPrimary) onSetPrimary(media.id)
           }}
-          className="text-[11px] font-medium text-white/60 transition-colors hover:text-red-400 disabled:cursor-not-allowed disabled:opacity-40"
+          aria-label={media.isPrimary ? 'Imagen principal' : 'Marcar como principal'}
+          aria-pressed={media.isPrimary}
+          className="absolute bottom-1.5 left-1.5 flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-bold uppercase backdrop-blur-sm transition-colors disabled:cursor-not-allowed disabled:opacity-40"
+          style={{
+            backgroundColor: media.isPrimary ? '#E87A00' : 'rgba(0,0,0,0.7)',
+            color: '#FFFFFF',
+          }}
         >
-          Eliminar
+          <Star
+            className="h-2.5 w-2.5"
+            aria-hidden="true"
+            strokeWidth={2.5}
+            fill={media.isPrimary ? 'currentColor' : 'none'}
+          />
+          {media.isPrimary ? 'Principal' : 'Marcar'}
         </button>
-      </div>
+      )}
     </div>
   )
 }
 
 export default function MediaList({ productId, initial }: MediaListProps) {
-  // Local optimistic state — refreshed from the server on every mutation.
   const [items, setItems] = useState<ProductMedia[]>(
     [...initial].sort((a, b) => a.position - b.position),
   )
@@ -175,9 +163,7 @@ export default function MediaList({ productId, initial }: MediaListProps) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: 'reorder', productId, order }),
     })
-    if (!res.ok) {
-      setServerError('No se pudo reordenar. Recarga la página.')
-    }
+    if (!res.ok) setServerError('No se pudo reordenar. Recarga la página.')
   }
 
   const handleDragEnd = (e: DragEndEvent) => {
@@ -249,20 +235,16 @@ export default function MediaList({ productId, initial }: MediaListProps) {
     }
   }
 
+  const canAdd = items.length < MAX_MEDIA_PER_PRODUCT
+
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
         <label className="text-sm font-medium text-white">Galería de fotos y videos</label>
         <span className="text-xs" style={{ color: 'rgba(255,255,255,0.45)' }}>
-          {items.length} archivo{items.length === 1 ? '' : 's'}
+          {items.length}/{MAX_MEDIA_PER_PRODUCT}
         </span>
       </div>
-
-      <MediaUploader
-        productId={productId}
-        currentCount={items.length}
-        onUploaded={handleUploaded}
-      />
 
       {serverError && (
         <p className="text-xs font-medium" style={{ color: '#FCA5A5' }}>
@@ -270,29 +252,41 @@ export default function MediaList({ productId, initial }: MediaListProps) {
         </p>
       )}
 
-      {items.length > 0 && (
-        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-          <SortableContext items={items.map((m) => m.id)} strategy={rectSortingStrategy}>
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-              {items.map((media) => (
-                <SortableCard
-                  key={media.id}
-                  media={media}
-                  busyId={busyId}
-                  onSetPrimary={handleSetPrimary}
-                  onDelete={handleDelete}
-                />
-              ))}
-            </div>
-          </SortableContext>
-        </DndContext>
-      )}
+      {/* Single grid: existing media + uploader tile share the same row */}
+      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+        <SortableContext items={items.map((m) => m.id)} strategy={rectSortingStrategy}>
+          <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
+            {items.map((media) => (
+              <SortableCard
+                key={media.id}
+                media={media}
+                busyId={busyId}
+                onSetPrimary={handleSetPrimary}
+                onDelete={handleDelete}
+              />
+            ))}
+
+            {canAdd && (
+              <MediaUploader
+                productId={productId}
+                currentCount={items.length}
+                onUploaded={handleUploaded}
+                variant="tile"
+              />
+            )}
+          </div>
+        </SortableContext>
+      </DndContext>
 
       {items.length === 0 && (
-        <p className="text-xs" style={{ color: 'rgba(255,255,255,0.45)' }}>
-          Todavía no hay archivos. Agrega al menos una imagen para que el producto se muestre bien.
+        <p className="text-xs" style={{ color: 'rgba(255,255,255,0.5)' }}>
+          Todavía no hay archivos. Agrega al menos una imagen para que el producto se vea bien en la tienda.
         </p>
       )}
+
+      <p className="text-[11px]" style={{ color: 'rgba(255,255,255,0.4)' }}>
+        Arrastra para reordenar · <Star className="inline h-2.5 w-2.5" aria-hidden="true" /> marca la imagen principal (la que sale en las tarjetas del home) · Imagen ≤5MB · Video MP4/WebM ≤20MB
+      </p>
     </div>
   )
 }

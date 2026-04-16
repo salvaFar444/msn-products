@@ -77,13 +77,19 @@ export async function getMediaForProduct(productId: string): Promise<ProductMedi
 
 // ─── Admin writes (service role) ────────────────────────────────
 
+export type UploadResult =
+  | { ok: true; url: string }
+  | { ok: false; error: string; hint?: string }
+
 // Upload a single file to the correct bucket and return its public URL.
-// Filename is a random UUID per upload to avoid collisions.
+// Filename is a random UUID per upload to avoid collisions. Returns a
+// discriminated result so the caller can surface the *actual* Supabase
+// error message (bucket missing, mime rejected, size exceeded, RLS…).
 export async function uploadMediaFile(
   file: File,
   productId: string,
   kind: MediaType
-): Promise<string | null> {
+): Promise<UploadResult> {
   const client = createServerClient()
   const bucket = kind === 'image' ? SUPABASE_BUCKET : SUPABASE_VIDEO_BUCKET
   const ext = (file.name.split('.').pop() ?? (kind === 'image' ? 'jpg' : 'mp4')).toLowerCase()
@@ -94,12 +100,25 @@ export async function uploadMediaFile(
     .upload(path, file, { upsert: false, contentType: file.type })
 
   if (error) {
-    console.error('[media] upload error:', error)
-    return null
+    console.error('[media] upload error:', { bucket, path, mime: file.type, size: file.size, error })
+    const msg = (error as { message?: string }).message ?? 'Error desconocido de Supabase Storage.'
+    // Common failure modes → actionable hint for the admin.
+    let hint: string | undefined
+    const lower = msg.toLowerCase()
+    if (lower.includes('bucket') && (lower.includes('not found') || lower.includes('does not exist'))) {
+      hint = `El bucket "${bucket}" no existe en Supabase. Corre la migración 002_product_media.sql en el SQL Editor.`
+    } else if (lower.includes('mime')) {
+      hint = `Tipo de archivo no permitido por el bucket. Solo MP4/WebM para videos y JPG/PNG/WebP para imágenes.`
+    } else if (lower.includes('exceeded') || lower.includes('size') || lower.includes('too large')) {
+      hint = `El archivo supera el límite del bucket (${kind === 'video' ? '20MB' : '5MB'}).`
+    } else if (lower.includes('row-level security') || lower.includes('rls') || lower.includes('policy')) {
+      hint = `Falta policy de escritura en storage.objects para ${bucket}, o SUPABASE_SERVICE_ROLE_KEY no está configurada.`
+    }
+    return { ok: false, error: msg, hint }
   }
 
   const { data } = client.storage.from(bucket).getPublicUrl(path)
-  return data.publicUrl
+  return { ok: true, url: data.publicUrl }
 }
 
 export interface CreateMediaInput {
@@ -223,6 +242,39 @@ export async function deleteMedia(mediaId: string): Promise<boolean> {
     .delete()
     .eq('id', mediaId)
   return !delErr
+}
+
+// Backfill a single legacy image_url as the primary media row when a
+// product was created BEFORE the product_media table existed (or before
+// migration 002 ran its backfill). Idempotent: no-op if any media row
+// already exists for the product. Returns true if a row was inserted.
+export async function ensureLegacyMediaBackfilled(
+  productId: string,
+  imageUrl: string | null | undefined
+): Promise<boolean> {
+  if (!imageUrl) return false
+  const client = createServerClient()
+
+  const { data: existing } = await client
+    .from('product_media')
+    .select('id')
+    .eq('product_id', productId)
+    .limit(1)
+
+  if (existing && existing.length > 0) return false
+
+  const { error } = await client.from('product_media').insert({
+    product_id: productId,
+    url: imageUrl,
+    media_type: 'image',
+    position: 0,
+    is_primary: true,
+  })
+  if (error) {
+    console.error('[media] legacy backfill error:', error)
+    return false
+  }
+  return true
 }
 
 // Sync the `products.image_url` cache to match the current primary image
