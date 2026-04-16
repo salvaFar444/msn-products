@@ -57,11 +57,11 @@ export default function ImageUploader({ currentUrl, onChange }: ImageUploaderPro
         onDragOver={(e) => { e.preventDefault(); setIsDragging(true) }}
         onDragLeave={() => setIsDragging(false)}
         onDrop={handleDrop}
-        className={`relative flex cursor-pointer flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed p-8 transition-colors ${
-          isDragging
-            ? 'border-accent bg-accent-muted'
-            : 'border-border hover:border-border-strong hover:bg-white/3'
-        }`}
+        className="relative flex cursor-pointer flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed bg-[#1A1A1A] p-8 transition-colors"
+        style={{
+          borderColor: isDragging ? '#E87A00' : 'rgba(255,255,255,0.12)',
+          backgroundColor: isDragging ? 'rgba(232,122,0,0.08)' : '#1A1A1A',
+        }}
         role="button"
         tabIndex={0}
         aria-label="Subir imagen de producto"
@@ -78,7 +78,7 @@ export default function ImageUploader({ currentUrl, onChange }: ImageUploaderPro
             />
           </div>
         ) : (
-          <div className="flex flex-col items-center gap-2 text-muted">
+          <div className="flex flex-col items-center gap-2" style={{ color: 'rgba(255,255,255,0.6)' }}>
             <svg
               xmlns="http://www.w3.org/2000/svg"
               fill="none"
@@ -95,9 +95,11 @@ export default function ImageUploader({ currentUrl, onChange }: ImageUploaderPro
               />
             </svg>
             <p className="text-sm">
-              <span className="font-medium text-accent">Haz clic</span> o arrastra aquí
+              <span className="font-semibold" style={{ color: '#E87A00' }}>Haz clic</span> o arrastra aquí
             </p>
-            <p className="text-xs">JPG, PNG, WebP — Máx. {MAX_IMAGE_SIZE_MB}MB</p>
+            <p className="text-xs" style={{ color: 'rgba(255,255,255,0.45)' }}>
+              JPG, PNG, WebP — Máx. {MAX_IMAGE_SIZE_MB}MB
+            </p>
           </div>
         )}
 
@@ -119,13 +121,18 @@ export default function ImageUploader({ currentUrl, onChange }: ImageUploaderPro
             setPreview(null)
             onChange(null)
           }}
-          className="text-xs text-muted hover:text-danger transition-colors"
+          className="text-xs transition-colors"
+          style={{ color: 'rgba(255,255,255,0.55)' }}
         >
           Quitar imagen
         </button>
       )}
 
-      {error && <p className="text-xs text-danger">{error}</p>}
+      {error && (
+        <p className="text-xs font-medium" style={{ color: '#FCA5A5' }}>
+          {error}
+        </p>
+      )}
     </div>
   )
 }

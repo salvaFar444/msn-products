@@ -102,14 +102,26 @@ export default function ProductForm({ product, onSubmit }: ProductFormProps) {
     }
   }
 
+  // Admin palette (matches login, sidebar and dashboard):
+  //   bg       #1A1A1A
+  //   border   rgba(255,255,255,0.1)
+  //   text     #FFFFFF
+  //   focus    #E87A00
   const inputClass =
-    'w-full rounded-xl border border-border bg-surface-raised px-4 py-3 text-sm text-white placeholder:text-muted-low outline-none transition-colors focus:border-accent'
+    'w-full rounded-xl border border-white/10 bg-[#1A1A1A] px-4 py-3 text-sm text-white placeholder:text-white/35 outline-none transition-colors focus:border-[#E87A00] focus:ring-2 focus:ring-[#E87A00]/20'
   const labelClass = 'mb-1.5 block text-sm font-medium text-white'
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {serverError && (
-        <div className="rounded-xl border border-danger/30 bg-danger/10 px-4 py-3 text-sm text-danger">
+        <div
+          className="rounded-xl px-4 py-3 text-sm"
+          style={{
+            backgroundColor: 'rgba(220,38,38,0.1)',
+            border: '1px solid rgba(220,38,38,0.3)',
+            color: '#FCA5A5',
+          }}
+        >
           {serverError}
         </div>
       )}
@@ -241,7 +253,7 @@ export default function ProductForm({ product, onSubmit }: ProductFormProps) {
                     type="button"
                     onClick={() => removeFeature(i)}
                     disabled={form.features.length === 1}
-                    className="flex h-[46px] w-[46px] items-center justify-center rounded-xl border border-border text-muted hover:border-danger/40 hover:text-danger transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                    className="flex h-[46px] w-[46px] items-center justify-center rounded-xl border border-white/10 bg-[#1A1A1A] text-white/60 transition-colors hover:border-red-500/40 hover:text-red-400 disabled:cursor-not-allowed disabled:opacity-40"
                     aria-label="Eliminar característica"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="h-4 w-4" aria-hidden="true">
@@ -253,7 +265,7 @@ export default function ProductForm({ product, onSubmit }: ProductFormProps) {
               <button
                 type="button"
                 onClick={addFeature}
-                className="flex items-center gap-2 text-sm text-accent hover:text-accent-hover transition-colors"
+                className="flex items-center gap-2 text-sm font-semibold text-[#E87A00] transition-colors hover:text-[#C96700]"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="h-4 w-4" aria-hidden="true">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
@@ -266,18 +278,22 @@ export default function ProductForm({ product, onSubmit }: ProductFormProps) {
       </div>
 
       {/* Actions */}
-      <div className="flex gap-3 border-t border-white/5 pt-6">
+      <div
+        className="flex gap-3 pt-6"
+        style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}
+      >
         <button
           type="button"
           onClick={() => router.back()}
-          className="rounded-xl border border-border px-6 py-2.5 text-sm font-medium text-white hover:bg-white/5 transition-colors"
+          className="rounded-xl border border-white/10 bg-[#1A1A1A] px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-white/5"
         >
           Cancelar
         </button>
         <button
           type="submit"
           disabled={loading}
-          className="flex items-center gap-2 rounded-xl bg-accent px-6 py-2.5 text-sm font-semibold text-white hover:bg-accent-hover transition-colors shadow-lg shadow-accent/20 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex items-center gap-2 rounded-xl bg-[#E87A00] px-6 py-2.5 text-sm font-semibold text-white shadow-lg transition-colors hover:bg-[#C96700] disabled:cursor-not-allowed disabled:opacity-50"
+          style={{ boxShadow: '0 10px 28px rgba(232,122,0,0.28)' }}
         >
           {loading && (
             <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">

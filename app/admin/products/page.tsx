@@ -22,13 +22,17 @@ export default async function AdminProductsPage() {
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-white">Productos</h1>
-          <p className="mt-1 text-sm text-muted">
+          <p className="mt-1 text-sm" style={{ color: 'rgba(255,255,255,0.55)' }}>
             {products.length} producto{products.length !== 1 ? 's' : ''} en el catálogo
           </p>
         </div>
         <Link
           href="/admin/products/new"
-          className="inline-flex items-center gap-2 rounded-xl bg-accent px-4 py-2.5 text-sm font-semibold text-white hover:bg-accent-hover transition-colors shadow-lg shadow-accent/20"
+          className="inline-flex items-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#C96700]"
+          style={{
+            backgroundColor: '#E87A00',
+            boxShadow: '0 10px 28px rgba(232,122,0,0.28)',
+          }}
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
