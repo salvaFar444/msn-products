@@ -7,15 +7,14 @@ export interface Product {
   name: string
   shortName: string
   category: ProductCategory
-  price: number       // COP integer, no decimals
+  price: number // COP integer, no decimals
   description: string
-  image: string       // Supabase Storage URL or '/img.jpg' fallback
-  badge?: string      // e.g. 'Más vendido', 'Nuevo'
-  stock: number       // 0 = Agotado
+  image: string // Supabase Storage URL or '/img.jpg' fallback
+  badge?: string // e.g. 'Más vendido', 'Nuevo'
+  stock: number // 0 = Agotado
   features: string[]
 }
 
-// Computed helper — not stored in DB
 export function isInStock(product: Product): boolean {
   return product.stock > 0
 }
@@ -30,6 +29,7 @@ export interface CartItem {
 export interface CartState {
   items: CartItem[]
   isOpen: boolean
+  isOrderFormOpen: boolean
 }
 
 export interface CartActions {
@@ -40,31 +40,11 @@ export interface CartActions {
   toggleCart: () => void
   openCart: () => void
   closeCart: () => void
+  openOrderForm: () => void
+  closeOrderForm: () => void
 }
 
 export type CartStore = CartState & CartActions
-
-// ─── Checkout Types ───────────────────────────────────────────────
-
-export interface CheckoutFormData {
-  firstName: string
-  lastName: string
-  email: string
-  phone: string       // +57 3XX XXX XXXX
-  department: string
-  city: string
-  address: string
-  notes?: string
-}
-
-export type PaymentMethod = 'mercadopago' | 'wompi' | 'nequi'
-
-export interface OrderSummaryData {
-  items: CartItem[]
-  subtotal: number
-  shipping: number    // 0 = free shipping
-  total: number
-}
 
 // ─── Admin Types ──────────────────────────────────────────────────
 
@@ -86,29 +66,6 @@ export interface ProductFormData {
   features: string[]
   imageFile?: File
   imageUrl?: string
-}
-
-// ─── Order Types ──────────────────────────────────────────────────
-
-export type OrderStatus = 'pending' | 'approved' | 'rejected' | 'cancelled'
-
-export interface OrderItem {
-  productId: string
-  name: string
-  price: number
-  quantity: number
-}
-
-export interface OrderRow {
-  id: string
-  mp_preference_id: string | null
-  mp_payment_id: string | null
-  status: OrderStatus
-  items: OrderItem[]
-  customer: CheckoutFormData
-  total: number
-  created_at: string
-  updated_at: string
 }
 
 // ─── Supabase DB Row Types ────────────────────────────────────────

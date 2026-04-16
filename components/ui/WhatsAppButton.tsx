@@ -1,6 +1,6 @@
 'use client'
 
-import { WHATSAPP_URL } from '@/lib/constants'
+import { WHATSAPP_URL } from '@/data/site'
 
 const WA_SVG = (
   <svg viewBox="0 0 24 24" fill="currentColor" className="h-7 w-7" aria-hidden="true">

@@ -2,7 +2,7 @@
 
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
-import type { CartStore, CartItem, Product } from '@/types'
+import type { CartStore, Product } from '@/types'
 import { CART_STORAGE_KEY } from '@/lib/constants'
 
 export const useCartStore = create<CartStore>()(
@@ -10,6 +10,7 @@ export const useCartStore = create<CartStore>()(
     (set, get) => ({
       items: [],
       isOpen: false,
+      isOrderFormOpen: false,
 
       addItem: (product: Product) => {
         if (product.stock === 0) return // Don't add out-of-stock items
@@ -52,16 +53,19 @@ export const useCartStore = create<CartStore>()(
         }))
       },
 
-      clearCart: () => set({ items: [] }),
+      clearCart: () =>
+        set({ items: [], isOrderFormOpen: false }),
 
       toggleCart: () => set((state) => ({ isOpen: !state.isOpen })),
       openCart: () => set({ isOpen: true }),
-      closeCart: () => set({ isOpen: false }),
+      closeCart: () => set({ isOpen: false, isOrderFormOpen: false }),
+
+      openOrderForm: () => set({ isOrderFormOpen: true }),
+      closeOrderForm: () => set({ isOrderFormOpen: false }),
     }),
     {
       name: CART_STORAGE_KEY,
       storage: createJSONStorage(() => localStorage),
-      // Only persist items, not isOpen (drawer always starts closed)
       partialize: (state) => ({ items: state.items }),
     }
   )

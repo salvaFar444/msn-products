@@ -1,159 +1,156 @@
-import { WHATSAPP_URL } from '@/lib/constants'
+'use client'
 
-const WA_ICON = (
-  <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5" aria-hidden="true">
+import { motion } from 'framer-motion'
+import { ArrowDown, MapPin, ShieldCheck, Star, Wallet } from 'lucide-react'
+import { SITE, WHATSAPP_URL } from '@/data/site'
+
+const WhatsAppGlyph = () => (
+  <svg
+    viewBox="0 0 24 24"
+    fill="currentColor"
+    className="h-5 w-5"
+    aria-hidden="true"
+  >
     <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
   </svg>
 )
 
-const TRUST = [
-  { icon: '⚡', label: 'Envío el mismo día' },
-  { icon: '🛡️', label: 'Garantía 30 días' },
-  { icon: '✓', label: 'Original Apple' },
-  { icon: '⭐', label: '+500 clientes' },
+const BADGES = [
+  { icon: MapPin, label: `Domicilio gratis en ${SITE.city}` },
+  { icon: Wallet, label: `Pago contra entrega en ${SITE.city}` },
+  {
+    icon: ShieldCheck,
+    label: `Garantía de ${SITE.warrantyMonths} meses`,
+  },
+  { icon: Star, label: 'Atención directa por WhatsApp' },
 ]
+
+const fadeUp = {
+  hidden: { opacity: 0, y: 28 },
+  show: (i: number) => ({
+    opacity: 1,
+    y: 0,
+    transition: {
+      delay: 0.08 * i,
+      duration: 0.7,
+      ease: [0.22, 1, 0.36, 1],
+    },
+  }),
+}
 
 export default function Hero() {
   return (
-    <section className="relative flex min-h-screen items-center justify-center overflow-hidden noise-overlay">
-      {/* Base bg */}
-      <div className="absolute inset-0 bg-[#0A0A0A]" />
-
-      {/* Glow — golden orb, very subtle */}
+    <section className="relative overflow-hidden bg-background">
+      {/* Very subtle accent glow */}
       <div
-        className="pointer-events-none absolute"
-        style={{
-          top: '-15%',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          width: '700px',
-          height: '700px',
-          background: 'radial-gradient(circle, rgba(201,168,76,0.10) 0%, transparent 65%)',
-          filter: 'blur(40px)',
-        }}
         aria-hidden="true"
+        className="pointer-events-none absolute -top-40 left-1/2 h-[520px] w-[520px] -translate-x-1/2 rounded-full opacity-40 blur-3xl"
+        style={{
+          background:
+            'radial-gradient(circle, rgba(232,122,0,0.12) 0%, transparent 70%)',
+        }}
       />
 
-      {/* Secondary glow — white, top center */}
-      <div
-        className="pointer-events-none absolute"
-        style={{
-          top: '-5%',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          width: '400px',
-          height: '400px',
-          background: 'radial-gradient(circle, rgba(255,255,255,0.04) 0%, transparent 70%)',
-        }}
-        aria-hidden="true"
-      />
-
-      {/* Content */}
-      <div className="relative z-10 mx-auto max-w-4xl px-5 pt-36 pb-24 text-center sm:px-8 sm:pt-28">
-
+      <div className="relative mx-auto max-w-5xl px-5 pt-20 pb-20 text-center sm:px-8 sm:pt-24 sm:pb-28">
         {/* Eyebrow pill */}
-        <div
-          className="animate-fade-up mb-8 inline-flex items-center gap-2.5 rounded-full border px-4 py-1.5 opacity-0 [animation-delay:0ms] [animation-fill-mode:forwards]"
-          style={{ borderColor: 'rgba(201,168,76,0.3)', background: 'rgba(201,168,76,0.06)' }}
+        <motion.div
+          variants={fadeUp}
+          initial="hidden"
+          animate="show"
+          custom={0}
+          className="inline-flex items-center gap-2 rounded-full border border-accent/30 bg-accent-soft px-4 py-1.5"
         >
-          <span className="relative flex h-1.5 w-1.5">
-            <span
-              className="absolute inline-flex h-full w-full animate-ping rounded-full opacity-75"
-              style={{ backgroundColor: '#C9A84C' }}
-            />
-            <span
-              className="relative inline-flex h-1.5 w-1.5 rounded-full"
-              style={{ backgroundColor: '#C9A84C' }}
-            />
+          <span className="relative flex h-2 w-2">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent opacity-60" />
+            <span className="relative inline-flex h-2 w-2 rounded-full bg-accent" />
           </span>
-          <span className="text-xs font-medium tracking-[0.12em] uppercase" style={{ color: '#C9A84C' }}>
-            Accesorios Apple en Colombia
+          <span className="text-[11px] font-bold uppercase tracking-[0.15em] text-accent-hover">
+            {SITE.city}, {SITE.department}
           </span>
-        </div>
+        </motion.div>
 
-        {/* Headline — serif, large */}
-        <h1
-          className="animate-fade-up mb-6 font-serif opacity-0 [animation-delay:120ms] [animation-fill-mode:forwards] leading-[1.08] tracking-tight"
-          style={{
-            fontFamily: 'var(--font-playfair), Georgia, serif',
-            fontSize: 'clamp(2.8rem, 8vw, 6rem)',
-            fontWeight: 700,
-            color: '#FFFFFF',
-          }}
+        {/* Headline */}
+        <motion.h1
+          variants={fadeUp}
+          initial="hidden"
+          animate="show"
+          custom={1}
+          className="mt-8 font-display font-extrabold leading-[1.05] tracking-tight text-ink-strong"
+          style={{ fontSize: 'clamp(2.6rem, 7.5vw, 5.5rem)' }}
         >
-          Tecnología Apple.
+          Tecnología que llega
           <br />
-          <span style={{ color: '#C9A84C' }}>Precio colombiano.</span>
-        </h1>
+          <span className="text-accent">a tu puerta.</span>
+        </motion.h1>
 
         {/* Subheadline */}
-        <p
-          className="animate-fade-up mx-auto mb-10 max-w-xl leading-relaxed opacity-0 [animation-delay:220ms] [animation-fill-mode:forwards]"
-          style={{ fontSize: 'clamp(0.95rem, 2.2vw, 1.15rem)', color: '#888888' }}
+        <motion.p
+          variants={fadeUp}
+          initial="hidden"
+          animate="show"
+          custom={2}
+          className="mx-auto mt-6 max-w-2xl text-base font-medium leading-relaxed text-ink-light sm:text-lg"
         >
-          Accesorios originales con garantía incluida.
+          Accesorios tecnológicos en {SITE.city} con domicilio gratis y pago
+          contra entrega. Paga solo cuando recibas tu pedido. Garantía de{' '}
+          {SITE.warrantyMonths} meses en todos nuestros productos.
           <br className="hidden sm:block" />
-          Envío a todo el país, sin costo adicional.
-        </p>
+          <span className="text-ink-muted">
+            ¿Vives fuera de {SITE.city}? Escríbenos por WhatsApp y coordinamos
+            envío.
+          </span>
+        </motion.p>
 
         {/* CTAs */}
-        <div
-          className="animate-fade-up mb-14 flex flex-col items-center gap-3 opacity-0 [animation-delay:320ms] [animation-fill-mode:forwards] sm:flex-row sm:justify-center"
+        <motion.div
+          variants={fadeUp}
+          initial="hidden"
+          animate="show"
+          custom={3}
+          className="mt-10 flex flex-col items-center gap-3 sm:flex-row sm:justify-center"
         >
           <a
             href="#products"
-            className="inline-flex w-full items-center justify-center gap-2 rounded-xl px-7 py-3.5 text-sm font-semibold tracking-wide transition-all duration-200 hover:opacity-90 active:scale-[0.97] sm:w-auto sm:px-8 sm:py-4"
-            style={{ backgroundColor: '#FFFFFF', color: '#0A0A0A' }}
+            className="btn-primary inline-flex w-full items-center justify-center gap-2 rounded-full px-8 py-4 text-sm font-bold tracking-wide uppercase active:scale-[0.97] sm:w-auto"
           >
-            VER PRODUCTOS
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="h-4 w-4" aria-hidden="true">
-              <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
-            </svg>
+            Ver productos
+            <ArrowDown className="h-4 w-4" aria-hidden="true" />
           </a>
           <a
             href={WHATSAPP_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex w-full items-center justify-center gap-2 rounded-xl px-7 py-3.5 text-sm font-semibold tracking-wide text-white transition-all duration-200 hover:opacity-90 active:scale-[0.97] sm:w-auto sm:px-8 sm:py-4"
-            style={{ backgroundColor: '#25D366' }}
+            className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-whatsapp hover:bg-whatsapp-hover px-8 py-4 text-sm font-bold tracking-wide uppercase text-white transition-colors active:scale-[0.97] sm:w-auto"
           >
-            {WA_ICON}
-            PEDIR POR WHATSAPP
+            <WhatsAppGlyph />
+            Pedir por WhatsApp
           </a>
-        </div>
+        </motion.div>
 
-        {/* Trust bar */}
-        <div
-          className="animate-fade-up flex flex-wrap items-center justify-center gap-x-6 gap-y-3 opacity-0 [animation-delay:440ms] [animation-fill-mode:forwards]"
+        {/* Badges */}
+        <motion.div
+          variants={fadeUp}
+          initial="hidden"
+          animate="show"
+          custom={4}
+          className="mt-12 grid grid-cols-2 gap-3 sm:flex sm:flex-wrap sm:items-center sm:justify-center sm:gap-x-6 sm:gap-y-3"
         >
-          {TRUST.map(({ icon, label }, i) => (
-            <div key={label} className="flex items-center gap-2">
-              {i > 0 && (
-                <span className="hidden text-white/15 sm:inline">|</span>
-              )}
-              <span className="text-sm" aria-hidden="true">{icon}</span>
-              <span className="text-xs font-medium tracking-wide" style={{ color: '#888888' }}>
+          {BADGES.map(({ icon: Icon, label }) => (
+            <div
+              key={label}
+              className="flex items-center gap-2 rounded-full border border-border bg-white px-3 py-2 shadow-card sm:border-0 sm:bg-transparent sm:shadow-none"
+            >
+              <Icon
+                className="h-4 w-4 flex-shrink-0 text-accent"
+                aria-hidden="true"
+                strokeWidth={2.2}
+              />
+              <span className="text-xs font-semibold text-ink sm:text-sm">
                 {label}
               </span>
             </div>
           ))}
-        </div>
-      </div>
-
-      {/* Scroll indicator */}
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-          strokeWidth={1.5}
-          stroke="currentColor"
-          className="h-5 w-5"
-          style={{ color: 'rgba(255,255,255,0.2)' }}
-          aria-hidden="true"
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
-        </svg>
+        </motion.div>
       </div>
     </section>
   )

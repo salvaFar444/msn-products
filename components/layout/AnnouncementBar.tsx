@@ -1,36 +1,38 @@
-// Announcement bar — slim marquee, dark luxury
+// Announcement bar — slim marquee on black background, clean white text.
 function Segment() {
   return (
-    <span className="inline-flex items-center gap-0 text-[11px] font-medium tracking-[0.08em] uppercase">
-      <span className="text-white/70">Accesorios Apple Originales</span>
-      <span className="mx-4 text-white/20">·</span>
-      <span style={{ color: '#25D366' }} className="font-semibold">Envíos a Toda Colombia</span>
-      <span className="mx-4 text-white/20">·</span>
-      <span className="text-white/70">Combo Cargador </span>
-      <span style={{ color: '#C9A84C' }} className="font-bold ml-1">$120.000</span>
-      <span className="mx-4 text-white/20">·</span>
-      <span className="text-white/70">Garantía Incluida</span>
-      <span className="mx-4 text-white/20">·</span>
-      <span style={{ color: '#25D366' }} className="font-semibold">Envío Gratis a Todo el País</span>
-      <span className="mx-4 text-white/20">·</span>
+    <span className="inline-flex items-center text-[11px] font-semibold tracking-[0.08em] uppercase text-white">
+      <span>📍 Domicilio gratis en Montería</span>
+      <span className="mx-5 text-white/30" aria-hidden="true">·</span>
+      <span>💵 Pago contra entrega en Montería</span>
+      <span className="mx-5 text-white/30" aria-hidden="true">·</span>
+      <span>🛡️ Garantía de 3 meses</span>
+      <span className="mx-5 text-white/30" aria-hidden="true">·</span>
+      <span>🚚 Envíos fuera de Montería por WhatsApp</span>
+      <span className="mx-5 text-white/30" aria-hidden="true">·</span>
+      <span>💬 Atención directa por WhatsApp</span>
+      <span className="mx-5 text-white/30" aria-hidden="true">·</span>
     </span>
   )
 }
 
 export default function AnnouncementBar() {
-  const count = 5
+  const count = 4
   return (
     <div
-      role="marquee"
       aria-label="Anuncio de la tienda"
-      className="fixed left-0 right-0 top-0 z-50 h-8 overflow-hidden bg-[#050505] border-b border-white/[0.06] flex items-center"
+      className="fixed left-0 right-0 top-0 z-50 h-9 overflow-hidden bg-primary flex items-center"
     >
-      <div className="flex whitespace-nowrap animate-marquee" aria-hidden="true">
+      <div className="flex whitespace-nowrap animate-marquee">
         <span className="px-6">
-          {Array.from({ length: count }).map((_, i) => <Segment key={i} />)}
+          {Array.from({ length: count }).map((_, i) => (
+            <Segment key={`a-${i}`} />
+          ))}
         </span>
         <span className="px-6" aria-hidden="true">
-          {Array.from({ length: count }).map((_, i) => <Segment key={i} />)}
+          {Array.from({ length: count }).map((_, i) => (
+            <Segment key={`b-${i}`} />
+          ))}
         </span>
       </div>
     </div>

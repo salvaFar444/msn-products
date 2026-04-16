@@ -75,19 +75,19 @@ CREATE POLICY "product_images_public_read"
 -- ─── Seed Initial Products ───────────────────────
 INSERT INTO products (name, short_name, category, price, description, image_url, badge, stock, features) VALUES
 (
-  'Apple Watch',
-  'Apple Watch',
+  'Smartwatch Deportivo con Sensor Cardíaco',
+  'Smartwatch Deportivo',
   'Wearables',
   150000,
-  'Smartwatch con monitoreo de salud avanzado y conectividad perfecta con tu iPhone.',
+  'Smartwatch con monitoreo de salud avanzado y conectividad con tu smartphone.',
   '/img.jpg',
   'Más vendido',
   10,
   ARRAY['Monitoreo de frecuencia cardíaca', 'GPS integrado', 'Resistente al agua', 'Batería de 18 horas', 'Detección de caídas']
 ),
 (
-  'AirPods PRO 2da gen',
-  'AirPods Pro 2',
+  'Audífonos Inalámbricos Pro con Cancelación de Ruido',
+  'Audífonos Pro',
   'Audio',
   65000,
   'Cancelación activa de ruido mejorada con audio espacial personalizado.',
@@ -97,26 +97,26 @@ INSERT INTO products (name, short_name, category, price, description, image_url,
   ARRAY['Cancelación activa de ruido', 'Audio espacial personalizado', 'Resistencia al agua IPX4', 'Hasta 6h reproducción', 'Estuche con carga inalámbrica']
 ),
 (
-  'AirPods PRO 3ra gen',
-  'AirPods Pro 3',
+  'Audífonos Inalámbricos Pro 3ra Generación',
+  'Audífonos Pro 3',
   'Audio',
   75000,
-  'La evolución definitiva de los AirPods Pro con sonido de siguiente nivel.',
+  'La evolución definitiva de nuestros audífonos Pro con sonido de siguiente nivel.',
   '/img.jpg',
   'Nuevo',
   12,
-  ARRAY['Chip H2 mejorado', 'ANC de clase mundial', 'Audio sin pérdidas (via cable)', 'Hasta 7h reproducción', 'Estuche USB-C']
+  ARRAY['Chip mejorado', 'ANC de clase mundial', 'Audio sin pérdidas (via cable)', 'Hasta 7h reproducción', 'Estuche USB-C']
 ),
 (
-  'AirPods serie 4',
-  'AirPods 4',
+  'Audífonos Inalámbricos Básicos con Estuche de Carga',
+  'Audífonos Básicos',
   'Audio',
   75000,
-  'Los AirPods más cómodos con diseño renovado y audio de alta calidad.',
+  'Los audífonos más cómodos con diseño renovado y audio de alta calidad.',
   '/img.jpg',
   NULL,
   8,
-  ARRAY['Nuevo diseño ergonómico', 'Chip H2', 'Audio adaptativo', 'Hasta 5h reproducción', 'Carga inalámbrica']
+  ARRAY['Nuevo diseño ergonómico', 'Audio adaptativo', 'Estuche de carga', 'Hasta 5h reproducción', 'Carga inalámbrica']
 ),
 (
   'Cable USB-C a USB-C',
@@ -127,27 +127,27 @@ INSERT INTO products (name, short_name, category, price, description, image_url,
   '/img.jpg',
   NULL,
   30,
-  ARRAY['Carga rápida 60W', 'Transferencia de datos 480 Mbps', 'Nylon trenzado resistente', '1 metro de largo', 'Compatible con MagSafe']
+  ARRAY['Carga rápida 60W', 'Transferencia de datos 480 Mbps', 'Nylon trenzado resistente', '1 metro de largo', 'Compatible con carga magnética']
 ),
 (
-  'Cabeza cargador iPhone',
-  'Cargador iPhone',
+  'Cargador USB-C 20W de Carga Rápida',
+  'Cargador USB-C 20W',
   'Cargadores',
   60000,
-  'Adaptador de carga rápida USB-C de 20W, oficial Apple.',
+  'Adaptador de carga rápida USB-C de 20W, compacto y universal.',
   '/img.jpg',
   NULL,
   20,
-  ARRAY['20W de potencia', 'Carga rápida para iPhone', 'Compacto y liviano', 'Compatible con MacBook Air', 'Certificado MFi']
+  ARRAY['20W de potencia', 'Carga rápida universal', 'Compacto y liviano', 'Compatible con laptops ligeras', 'Certificado de seguridad']
 ),
 (
-  'AirPods MAX',
-  'AirPods Max',
+  'Audífonos Over-Ear Inalámbricos Premium',
+  'Over-Ear Premium',
   'Audio',
   150000,
-  'Over-ear de primera clase con cancelación de ruido premium y audio espacial envolvente.',
+  'Over-ear de primera clase con cancelación de ruido premium y audio envolvente.',
   '/img.jpg',
   'Premium',
   5,
-  ARRAY['Cancelación de ruido líder en la industria', 'Audio espacial Dolby Atmos', 'Corona Digital', '20h de batería', 'Diadema de malla transpirable']
+  ARRAY['Cancelación de ruido líder', 'Audio espacial envolvente', 'Control de volumen rotatorio', '20h de batería', 'Diadema de malla transpirable']
 );

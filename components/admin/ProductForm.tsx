@@ -121,14 +121,14 @@ export default function ProductForm({ product, onSubmit }: ProductFormProps) {
             <label htmlFor="name" className={labelClass}>
               Nombre completo<span className="text-danger ml-0.5">*</span>
             </label>
-            <input id="name" type="text" required value={form.name} onChange={(e) => setField('name', e.target.value)} placeholder="AirPods PRO 2da gen" className={inputClass} />
+            <input id="name" type="text" required value={form.name} onChange={(e) => setField('name', e.target.value)} placeholder="Audífonos Inalámbricos Pro" className={inputClass} />
           </div>
 
           <div>
             <label htmlFor="shortName" className={labelClass}>
               Nombre corto<span className="text-danger ml-0.5">*</span>
             </label>
-            <input id="shortName" type="text" required value={form.shortName} onChange={(e) => setField('shortName', e.target.value)} placeholder="AirPods Pro 2" className={inputClass} />
+            <input id="shortName" type="text" required value={form.shortName} onChange={(e) => setField('shortName', e.target.value)} placeholder="Audífonos Pro" className={inputClass} />
           </div>
 
           <div className="grid grid-cols-2 gap-4">

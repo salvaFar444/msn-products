@@ -1,131 +1,102 @@
-import { createServerClient } from './supabase-server'
-import type { OrderRow, OrderItem } from '@/types'
+/**
+ * lib/orders.ts — Stubbed order aggregates.
+ *
+ * Orders are now handled entirely through WhatsApp (no server-side
+ * persistence of orders). These helpers exist solely so the admin
+ * dashboard keeps compiling. They return empty datasets — the admin
+ * will simply show "no sales yet" metrics, which is accurate for the
+ * WhatsApp-based flow.
+ *
+ * If, in the future, you add an orders table back to Supabase, you can
+ * replace the bodies of these functions and the admin dashboard will
+ * start showing real data without further edits.
+ */
 
-// ─── Read ─────────────────────────────────────────────────────────
+export type OrderStatus = 'pending' | 'approved' | 'rejected' | 'cancelled'
 
-export async function getRecentOrders(days = 30): Promise<OrderRow[]> {
-  const client = createServerClient()
-  const since = new Date()
-  since.setDate(since.getDate() - days)
-
-  const { data, error } = await client
-    .from('orders')
-    .select('*')
-    .eq('status', 'approved')
-    .gte('created_at', since.toISOString())
-    .order('created_at', { ascending: false })
-
-  if (error) {
-    console.error('[orders] getRecentOrders error:', error)
-    return []
-  }
-
-  return (data ?? []) as OrderRow[]
+export interface OrderItem {
+  product_id: string
+  product_name: string
+  quantity: number
+  unit_price: number
 }
 
-// ─── Analytics helpers ────────────────────────────────────────────
+export interface OrderRow {
+  id: string
+  created_at: string
+  status: OrderStatus
+  total: number
+  items: OrderItem[]
+}
 
 export interface DailySales {
-  date: string    // 'YYYY-MM-DD'
-  revenue: number
-  count: number
+  /** Short label for the x-axis — e.g. "Mar 12". */
+  label: string
+  /** Total revenue for the day (COP). */
+  value: number
 }
 
+/** Returns the N most recent orders. Currently a no-op (empty list). */
+export async function getRecentOrders(_days = 30): Promise<OrderRow[]> {
+  return []
+}
+
+/** Returns the best-selling product name across the supplied orders. */
+export function getTopProduct(orders: OrderRow[]): string | null {
+  if (orders.length === 0) return null
+  const counts = new Map<string, number>()
+  for (const order of orders) {
+    for (const item of order.items) {
+      counts.set(
+        item.product_name,
+        (counts.get(item.product_name) ?? 0) + item.quantity,
+      )
+    }
+  }
+  let best: { name: string; qty: number } | null = null
+  counts.forEach((qty, name) => {
+    if (!best || qty > best.qty) best = { name, qty }
+  })
+  return best ? (best as { name: string; qty: number }).name : null
+}
+
+/**
+ * Aggregates the supplied orders into a rolling 14-day sales series so
+ * the <SalesChart /> component can render without special-casing empty
+ * data.
+ */
 export function aggregateWeeklySales(orders: OrderRow[]): DailySales[] {
-  const map = new Map<string, DailySales>()
+  const days = 14
+  const today = new Date()
+  const buckets = new Map<string, number>()
 
-  // Initialise last 7 days with zeros
-  for (let i = 6; i >= 0; i--) {
-    const d = new Date()
-    d.setDate(d.getDate() - i)
-    const key = d.toISOString().split('T')[0]
-    map.set(key, { date: key, revenue: 0, count: 0 })
+  // Seed empty buckets for each of the last N days
+  for (let i = days - 1; i >= 0; i--) {
+    const d = new Date(today)
+    d.setDate(today.getDate() - i)
+    buckets.set(toKey(d), 0)
   }
 
   for (const order of orders) {
-    const key = order.created_at.split('T')[0]
-    if (map.has(key)) {
-      const entry = map.get(key)!
-      entry.revenue += order.total
-      entry.count += 1
+    const key = toKey(new Date(order.created_at))
+    if (buckets.has(key)) {
+      buckets.set(key, (buckets.get(key) ?? 0) + order.total)
     }
   }
 
-  return Array.from(map.values())
+  const formatter = new Intl.DateTimeFormat('es-CO', {
+    month: 'short',
+    day: 'numeric',
+  })
+
+  return Array.from(buckets.entries()).map(([key, value]) => ({
+    label: formatter.format(new Date(key)),
+    value,
+  }))
 }
 
-export function getTopProduct(orders: OrderRow[]): string {
-  const counts = new Map<string, { name: string; qty: number }>()
-
-  for (const order of orders) {
-    const items = order.items as OrderItem[]
-    for (const item of items) {
-      const existing = counts.get(item.productId)
-      if (existing) {
-        existing.qty += item.quantity
-      } else {
-        counts.set(item.productId, { name: item.name, qty: item.quantity })
-      }
-    }
-  }
-
-  if (counts.size === 0) return '—'
-  return Array.from(counts.values()).sort((a, b) => b.qty - a.qty)[0].name
-}
-
-// ─── Write ────────────────────────────────────────────────────────
-
-export async function createOrder(
-  order: Omit<OrderRow, 'id' | 'created_at' | 'updated_at'>
-): Promise<OrderRow | null> {
-  const client = createServerClient()
-  const { data, error } = await client
-    .from('orders')
-    .insert(order)
-    .select()
-    .single()
-
-  if (error) {
-    console.error('[orders] createOrder error:', error)
-    return null
-  }
-
-  return data as OrderRow
-}
-
-export async function updateOrderStatus(
-  id: string,
-  status: OrderRow['status'],
-  mpPaymentId?: string
-): Promise<boolean> {
-  const client = createServerClient()
-  const { error } = await client
-    .from('orders')
-    .update({
-      status,
-      ...(mpPaymentId ? { mp_payment_id: mpPaymentId } : {}),
-      updated_at: new Date().toISOString(),
-    })
-    .eq('id', id)
-
-  if (error) {
-    console.error('[orders] updateOrderStatus error:', error)
-    return false
-  }
-
-  return true
-}
-
-export async function getOrderByPreferenceId(
-  preferenceId: string
-): Promise<OrderRow | null> {
-  const client = createServerClient()
-  const { data, error } = await client
-    .from('orders')
-    .select('*')
-    .eq('mp_preference_id', preferenceId)
-    .single()
-
-  if (error || !data) return null
-  return data as OrderRow
+function toKey(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(
+    d.getDate(),
+  ).padStart(2, '0')}`
 }

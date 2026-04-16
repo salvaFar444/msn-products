@@ -1,36 +1,34 @@
 'use client'
 
+import { useEffect, useRef, useState } from 'react'
+import { ShoppingBag } from 'lucide-react'
 import { useCart } from '@/hooks/useCart'
 
 export default function CartButton() {
   const { openCart, itemCount } = useCart()
+  const prevCountRef = useRef(itemCount)
+  const [popKey, setPopKey] = useState(0)
+
+  // Trigger the cart-pop animation whenever the cart count goes up
+  useEffect(() => {
+    if (itemCount > prevCountRef.current) {
+      setPopKey((k) => k + 1)
+    }
+    prevCountRef.current = itemCount
+  }, [itemCount])
 
   return (
     <button
       onClick={openCart}
       aria-label={`Carrito de compras${itemCount > 0 ? `, ${itemCount} artículo${itemCount !== 1 ? 's' : ''}` : ''}`}
-      className="relative flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-surface text-muted transition-colors hover:bg-surface-raised hover:text-primary"
+      className="relative flex h-10 w-10 items-center justify-center rounded-full border border-border bg-white text-ink-strong transition-all duration-200 hover:border-ink-strong hover:bg-surface active:scale-95"
     >
-      {/* Shopping bag icon */}
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        fill="none"
-        viewBox="0 0 24 24"
-        strokeWidth={1.5}
-        stroke="currentColor"
-        className="h-5 w-5"
-        aria-hidden="true"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          d="M15.75 10.5V6a3.75 3.75 0 1 0-7.5 0v4.5m11.356-1.993 1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 0 1-1.12-1.243l1.264-12A1.125 1.125 0 0 1 5.513 7.5h12.974c.576 0 1.059.435 1.119 1.007Z"
-        />
-      </svg>
+      <ShoppingBag className="h-5 w-5" strokeWidth={1.8} aria-hidden="true" />
 
       {itemCount > 0 && (
         <span
-          className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-accent text-[10px] font-bold text-white"
+          key={popKey}
+          className="absolute -right-1.5 -top-1.5 flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-accent px-1 text-[10px] font-bold text-white shadow-sm animate-cart-pop"
           aria-hidden="true"
         >
           {itemCount > 99 ? '99+' : itemCount}
