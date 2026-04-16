@@ -71,8 +71,11 @@ export default function ProductCard({ product }: ProductCardProps) {
 
         {/* Free delivery overlay on hover */}
         <div className="absolute bottom-0 left-0 right-0 translate-y-full transition-transform duration-300 ease-out group-hover:translate-y-0">
-          <div className="flex items-center justify-center gap-1.5 bg-success/10 py-2 text-[11px] font-bold text-success">
-            <Truck className="h-3.5 w-3.5" aria-hidden="true" />
+          <div
+            className="flex items-center justify-center gap-1.5 py-2.5 text-[11px] font-bold uppercase tracking-wide text-white shadow-lg"
+            style={{ backgroundColor: '#16A34A' }}
+          >
+            <Truck className="h-3.5 w-3.5" strokeWidth={2.5} aria-hidden="true" />
             Domicilio gratis en Montería
           </div>
         </div>

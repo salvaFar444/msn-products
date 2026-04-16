@@ -28,7 +28,7 @@ export const REVIEWS: Review[] = [
     name: 'Valentina Guerra',
     location: 'Cereté, Córdoba',
     text:
-      'Desde Cereté hice mi pedido y llegó sin problema. Me encantó que pudiera pagar contra entrega, eso me dio mucha confianza. Ya pedí por segunda vez.',
+      'Desde Cereté coordinamos todo por WhatsApp, fue súper fácil. Me explicaron el envío, me guiaron paso a paso y el producto llegó en perfecto estado. Ya pedí por segunda vez.',
     stars: 5,
   },
 ]
