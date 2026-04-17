@@ -31,6 +31,15 @@ const securityHeaders = [
 const nextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
+  experimental: {
+    // Next.js 14 server actions default to a 1MB body size limit. The admin
+    // product form never sends Files through the action (images go via
+    // /api/admin/upload first), but we raise the ceiling to be safe against
+    // large JSON payloads (e.g., many features / long descriptions).
+    serverActions: {
+      bodySizeLimit: '10mb',
+    },
+  },
   images: {
     remotePatterns: [
       {

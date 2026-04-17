@@ -126,42 +126,156 @@ export function summarizeReviews(reviews: ProductReview[]): { average: number; c
 
 // ─── Admin writes (uses service role, bypasses RLS) ─────────────
 
-export async function createProduct(
-  product: Omit<ProductRow, 'id' | 'created_at' | 'updated_at'>
-): Promise<Product | null> {
-  const client = createServerClient()
-  const { data, error } = await client
-    .from('products')
-    .insert(product)
-    .select()
-    .single()
+export type ProductWriteResult =
+  | { ok: true; product: Product }
+  | { ok: false; error: string; code?: string; hint?: string }
 
-  if (error || !data) {
-    console.error('Error creating product:', error)
-    return null
+// Turn a Supabase/Postgres error into a short, actionable Spanish message.
+// Recognises the most common failures we've hit: missing tables, RLS blocks,
+// missing/renamed columns (type vs media_type), NOT NULL violations and
+// unique-index collisions.
+function formatDbError(err: { message?: string; code?: string; details?: string; hint?: string } | null): {
+  error: string
+  code?: string
+  hint?: string
+} {
+  if (!err) return { error: 'Error desconocido de la base de datos.' }
+  const raw = err.message ?? 'Error desconocido de la base de datos.'
+  const lower = raw.toLowerCase()
+  let hint: string | undefined = err.hint
+
+  if (lower.includes('row-level security') || lower.includes('rls') || lower.includes('policy')) {
+    hint = 'Falta policy de INSERT/UPDATE en la tabla, o SUPABASE_SERVICE_ROLE_KEY no está configurada.'
+  } else if (lower.includes('schema cache') || err.code === 'PGRST204') {
+    hint = 'Falta una migración en Supabase. Corre 004_extended_fields.sql y 006_product_media_standardize.sql en el SQL Editor.'
+  } else if (lower.includes('does not exist') && lower.includes('column')) {
+    hint = 'Una columna del payload no existe en la tabla. Corre las migraciones 004 y 006 en el SQL Editor de Supabase.'
+  } else if (lower.includes('does not exist') && lower.includes('relation')) {
+    hint = 'Una tabla no existe en Supabase. Ejecuta las migraciones SQL pendientes.'
+  } else if (lower.includes('violates not-null') || lower.includes('null value')) {
+    hint = 'Falta un campo obligatorio. Revisa name, short_name, category, price o stock.'
+  } else if (lower.includes('duplicate key') || lower.includes('unique constraint')) {
+    hint = 'Ya existe otro registro con ese valor único (slug o primary por producto).'
+  } else if (lower.includes('invalid input syntax')) {
+    hint = 'El formato de un campo es inválido. Revisa precio y stock (deben ser números).'
   }
 
-  return rowToProduct(data as ProductRow)
+  return { error: raw, code: err.code, hint }
+}
+
+// Strip keys whose values are null/undefined. Prevents Supabase from
+// complaining about "column not found in schema cache" for fields that
+// were added by migrations that haven't been run yet (e.g., long_description
+// or specs before 004_extended_fields.sql). If we never mention the column
+// in the payload, Supabase won't validate it.
+function stripNullish<T extends Record<string, unknown>>(obj: T): Partial<T> {
+  const out: Record<string, unknown> = {}
+  for (const [k, v] of Object.entries(obj)) {
+    if (v !== null && v !== undefined) out[k] = v
+  }
+  return out as Partial<T>
+}
+
+// Detect Supabase's PGRST204 "column not found in schema cache" error and
+// extract the missing column name. Returns null if the error is unrelated.
+function extractMissingColumn(err: { code?: string; message?: string } | null): string | null {
+  if (!err) return null
+  const code = err.code ?? ''
+  const msg = err.message ?? ''
+  // PGRST204 is the PostgREST code for "column not found". The message
+  // usually looks like: "Could not find the 'xxx' column of 'yyy' in the
+  // schema cache".
+  if (code !== 'PGRST204' && !msg.includes('schema cache')) return null
+  const match = msg.match(/'([^']+)'\s+column/i)
+  return match?.[1] ?? null
+}
+
+export async function createProduct(
+  product: Omit<ProductRow, 'id' | 'created_at' | 'updated_at'>
+): Promise<ProductWriteResult> {
+  const client = createServerClient()
+  // 1st attempt: strip nullish keys so missing columns aren't even mentioned.
+  let payload: Record<string, unknown> = stripNullish(product as unknown as Record<string, unknown>)
+
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const { data, error } = await client
+      .from('products')
+      .insert(payload)
+      .select()
+      .single()
+
+    if (!error && data) {
+      return { ok: true, product: rowToProduct(data as ProductRow) }
+    }
+
+    console.error(`[createProduct] attempt=${attempt} Supabase error:`, {
+      payloadKeys: Object.keys(payload),
+      code: error?.code,
+      message: error?.message,
+      details: error?.details,
+      hint: error?.hint,
+    })
+
+    // If the error is a schema cache miss, drop that column and retry.
+    // This makes the admin work even when a migration hasn't been run yet.
+    const missing = extractMissingColumn(error)
+    if (missing && missing in payload) {
+      console.warn(
+        `[createProduct] Dropping '${missing}' — column not in Supabase schema cache. ` +
+          'Corre la migración correspondiente (ej. 004_extended_fields.sql) para habilitarla.',
+      )
+      delete payload[missing]
+      continue
+    }
+
+    // Non-recoverable — surface the real error to the UI.
+    return { ok: false, ...formatDbError(error) }
+  }
+
+  return { ok: false, error: 'Demasiados reintentos al insertar el producto.' }
 }
 
 export async function updateProduct(
   id: string,
   updates: Partial<Omit<ProductRow, 'id' | 'created_at'>>
-): Promise<Product | null> {
+): Promise<ProductWriteResult> {
   const client = createServerClient()
-  const { data, error } = await client
-    .from('products')
-    .update({ ...updates, updated_at: new Date().toISOString() })
-    .eq('id', id)
-    .select()
-    .single()
+  let payload: Record<string, unknown> = stripNullish(updates as unknown as Record<string, unknown>)
 
-  if (error || !data) {
-    console.error('Error updating product:', error)
-    return null
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const { data, error } = await client
+      .from('products')
+      .update({ ...payload, updated_at: new Date().toISOString() })
+      .eq('id', id)
+      .select()
+      .single()
+
+    if (!error && data) {
+      return { ok: true, product: rowToProduct(data as ProductRow) }
+    }
+
+    console.error(`[updateProduct] attempt=${attempt} Supabase error:`, {
+      id,
+      payloadKeys: Object.keys(payload),
+      code: error?.code,
+      message: error?.message,
+      details: error?.details,
+      hint: error?.hint,
+    })
+
+    const missing = extractMissingColumn(error)
+    if (missing && missing in payload) {
+      console.warn(
+        `[updateProduct] Dropping '${missing}' — column not in Supabase schema cache.`,
+      )
+      delete payload[missing]
+      continue
+    }
+
+    return { ok: false, ...formatDbError(error) }
   }
 
-  return rowToProduct(data as ProductRow)
+  return { ok: false, error: 'Demasiados reintentos al actualizar el producto.' }
 }
 
 export async function deleteProduct(id: string): Promise<boolean> {

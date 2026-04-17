@@ -54,15 +54,58 @@ function useUploadPath(productId?: string) {
   return id
 }
 
-async function uploadImageToStorage(file: File, uploadPath: string): Promise<string | null> {
+// Discriminated result so callers (ProductForm) can surface the actual
+// server error — including the 413 "Payload Too Large" case — instead of
+// a silent "Error al subir la imagen".
+type UploadOutcome =
+  | { ok: true; url: string }
+  | { ok: false; error: string; status: number }
+
+async function uploadImageToStorage(file: File, uploadPath: string): Promise<UploadOutcome> {
   const ext = file.name.split('.').pop() ?? 'jpg'
   const fd = new FormData()
   fd.append('file', file)
   fd.append('path', `${uploadPath}.${ext}`)
-  const res = await fetch('/api/admin/upload', { method: 'POST', body: fd })
-  if (!res.ok) return null
-  const json = await res.json() as { url?: string }
-  return json.url ?? null
+
+  let res: Response
+  try {
+    res = await fetch('/api/admin/upload', { method: 'POST', body: fd })
+  } catch (e) {
+    console.error('[uploadImageToStorage] network error:', e)
+    return { ok: false, error: 'Error de red al subir la imagen.', status: 0 }
+  }
+
+  // 413 sometimes comes from the platform (Vercel proxy) BEFORE hitting our
+  // route — the response body isn't JSON, so parse defensively.
+  if (res.status === 413) {
+    return {
+      ok: false,
+      status: 413,
+      error:
+        'La imagen es demasiado grande para subir (límite ~4.5MB en Vercel Hobby). Usa una imagen más liviana o comprímela antes.',
+    }
+  }
+
+  let json: { url?: string; error?: string; hint?: string } = {}
+  try {
+    json = (await res.json()) as typeof json
+  } catch {
+    // fall through — no parseable body
+  }
+
+  if (!res.ok) {
+    const base = json.error ?? `Error ${res.status} al subir la imagen.`
+    return {
+      ok: false,
+      status: res.status,
+      error: json.hint ? `${base} — ${json.hint}` : base,
+    }
+  }
+
+  if (!json.url) {
+    return { ok: false, status: res.status, error: 'El servidor no devolvió una URL.' }
+  }
+  return { ok: true, url: json.url }
 }
 
 export default function ProductForm({ product, onSubmit }: ProductFormProps) {
@@ -112,11 +155,13 @@ export default function ProductForm({ product, onSubmit }: ProductFormProps) {
       let resolvedImageUrl = form.imageUrl
       if (form.imageFile) {
         const uploaded = await uploadImageToStorage(form.imageFile, uploadPath)
-        if (!uploaded) {
-          setServerError('Error al subir la imagen. Intenta de nuevo.')
+        if (!uploaded.ok) {
+          // Surface the actual server error (413 payload, Supabase message, etc.)
+          // instead of a generic "Error al subir la imagen".
+          setServerError(uploaded.error)
           return
         }
-        resolvedImageUrl = uploaded
+        resolvedImageUrl = uploaded.url
       }
 
       const payload: ProductFormData = {
@@ -126,6 +171,11 @@ export default function ProductForm({ product, onSubmit }: ProductFormProps) {
         imageUrl: resolvedImageUrl,
       }
 
+      // NOTE: `await onSubmit(payload)` only resolves AFTER the server action
+      // completes — i.e., after the Supabase INSERT/UPDATE returns. We never
+      // call router.push before this line, so there is no "premature redirect"
+      // path. If the action throws, we land in the catch block below and show
+      // serverError instead of navigating.
       const result = await onSubmit(payload)
 
       if (result.success) {
