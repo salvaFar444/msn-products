@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
 import {
   DndContext,
@@ -25,8 +25,20 @@ import { MAX_MEDIA_PER_PRODUCT } from '@/lib/constants'
 import type { ProductMedia, MediaType } from '@/types'
 
 interface MediaListProps {
+  /** UUID of the product. In 'draft' mode this is a pre-generated UUID
+   *  that hasn't been committed to the DB yet. */
   productId: string
   initial: ProductMedia[]
+  /** 'commit' (default): each mutation hits /api/admin/media immediately
+   *  (used when editing an existing product).
+   *  'draft': mutations stay in local state only. Storage uploads still
+   *  happen right away (so we get the public URL) but no product_media
+   *  rows are inserted. The parent form is responsible for committing
+   *  the list on submit via `onChange`. */
+  mode?: 'commit' | 'draft'
+  /** Notified on every mutation in draft mode so the parent form can
+   *  include the media list in its submit payload. */
+  onChange?: (items: ProductMedia[]) => void
 }
 
 function SortableCard({
@@ -143,12 +155,20 @@ function SortableCard({
   )
 }
 
-export default function MediaList({ productId, initial }: MediaListProps) {
+export default function MediaList({ productId, initial, mode = 'commit', onChange }: MediaListProps) {
   const [items, setItems] = useState<ProductMedia[]>(
     [...initial].sort((a, b) => a.position - b.position),
   )
   const [busyId, setBusyId] = useState<string | null>(null)
   const [serverError, setServerError] = useState<string | null>(null)
+
+  // In draft mode, push the current list up to the parent form whenever it changes.
+  // We use a ref to avoid re-running on every onChange identity change.
+  const onChangeRef = useRef(onChange)
+  onChangeRef.current = onChange
+  useEffect(() => {
+    if (mode === 'draft') onChangeRef.current?.(items)
+  }, [items, mode])
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
@@ -156,6 +176,7 @@ export default function MediaList({ productId, initial }: MediaListProps) {
   )
 
   const persistReorder = async (next: ProductMedia[]) => {
+    if (mode === 'draft') return // local only
     setServerError(null)
     const order = next.map((m, i) => ({ id: m.id, position: i }))
     const res = await fetch('/api/admin/media', {
@@ -178,6 +199,14 @@ export default function MediaList({ productId, initial }: MediaListProps) {
   }
 
   const handleSetPrimary = async (mediaId: string) => {
+    if (mode === 'draft') {
+      // Local only: mark this id as primary, unmark others.
+      setItems((prev) =>
+        prev.map((m) => ({ ...m, isPrimary: m.id === mediaId && m.mediaType === 'image' })),
+      )
+      return
+    }
+
     setBusyId(mediaId)
     setServerError(null)
     const res = await fetch('/api/admin/media', {
@@ -196,6 +225,24 @@ export default function MediaList({ productId, initial }: MediaListProps) {
   }
 
   const handleDelete = async (mediaId: string) => {
+    if (mode === 'draft') {
+      // Local only. The file in Storage becomes a harmless orphan; a
+      // periodic cleanup job can remove files that have no DB row.
+      setItems((prev) => {
+        const next = prev.filter((m) => m.id !== mediaId)
+        // If we removed the primary image, promote the first remaining image.
+        const hasPrimary = next.some((m) => m.isPrimary && m.mediaType === 'image')
+        if (!hasPrimary) {
+          const firstImageIdx = next.findIndex((m) => m.mediaType === 'image')
+          if (firstImageIdx >= 0) {
+            return next.map((m, i) => ({ ...m, isPrimary: i === firstImageIdx }))
+          }
+        }
+        return next
+      })
+      return
+    }
+
     setBusyId(mediaId)
     setServerError(null)
     const res = await fetch(
@@ -213,6 +260,23 @@ export default function MediaList({ productId, initial }: MediaListProps) {
   const handleUploaded = async (payload: { url: string; mediaType: MediaType }) => {
     setServerError(null)
     const noPrimaryYet = !items.some((m) => m.isPrimary && m.mediaType === 'image')
+
+    if (mode === 'draft') {
+      // Don't hit /api/admin/media — the product doesn't exist yet.
+      // Build a local-only ProductMedia entry and append it.
+      const localRow: ProductMedia = {
+        id: `draft-${crypto.randomUUID()}`,
+        productId,
+        url: payload.url,
+        mediaType: payload.mediaType,
+        position: items.length,
+        isPrimary: payload.mediaType === 'image' && noPrimaryYet,
+        createdAt: new Date().toISOString(),
+      }
+      setItems((prev) => [...prev, localRow])
+      return
+    }
+
     const res = await fetch('/api/admin/media', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -246,6 +310,12 @@ export default function MediaList({ productId, initial }: MediaListProps) {
         </span>
       </div>
 
+      {mode === 'draft' && items.length === 0 && (
+        <p className="text-[11px]" style={{ color: 'rgba(255,255,255,0.55)' }}>
+          Sube al menos una imagen (se guardará al crear el producto). Puedes arrastrar para reordenar después.
+        </p>
+      )}
+
       {serverError && (
         <p className="text-xs font-medium" style={{ color: '#FCA5A5' }}>
           {serverError}
@@ -278,7 +348,7 @@ export default function MediaList({ productId, initial }: MediaListProps) {
         </SortableContext>
       </DndContext>
 
-      {items.length === 0 && (
+      {items.length === 0 && mode === 'commit' && (
         <p className="text-xs" style={{ color: 'rgba(255,255,255,0.5)' }}>
           Todavía no hay archivos. Agrega al menos una imagen para que el producto se vea bien en la tienda.
         </p>

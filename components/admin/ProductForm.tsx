@@ -2,9 +2,8 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import ImageUploader from './ImageUploader'
 import MediaList from './MediaList'
-import type { Product, ProductFormData, ProductCategory } from '@/types'
+import type { Product, ProductFormData, ProductCategory, ProductMedia } from '@/types'
 
 // Format an ISO timestamp (or undefined) into a human-readable
 // "16 abr 2026, 10:14 a. m." style string in Colombia timezone.
@@ -38,7 +37,21 @@ function buildInitialForm(product?: Product): ProductFormData {
     features: product?.features ?? [''],
     imageUrl: product?.image,
     imageFile: undefined,
+    media: product?.media ?? [],
   }
+}
+
+// Pick the URL that should be cached in products.image_url so the home
+// and catalog cards render the right thumbnail. Preference order:
+// 1) media flagged primary + image, 2) first image, 3) legacy imageUrl.
+function pickPrimaryImageUrl(media: ProductMedia[] | undefined, fallback?: string): string {
+  if (media && media.length > 0) {
+    const primary = media.find((m) => m.isPrimary && m.mediaType === 'image')
+    if (primary) return primary.url
+    const firstImage = media.find((m) => m.mediaType === 'image')
+    if (firstImage) return firstImage.url
+  }
+  return fallback ?? '/img.jpg'
 }
 
 const CATEGORIES: ProductCategory[] = ['Audio', 'Wearables', 'Cables', 'Cargadores']
@@ -48,64 +61,12 @@ interface ProductFormProps {
   onSubmit: (data: ProductFormData) => Promise<{ success: boolean; error?: string }>
 }
 
-// Stable upload path per form instance: use product id when editing, new UUID when creating
+// Stable upload path per form instance: use product id when editing, or a
+// pre-generated UUID when creating. This UUID is what MediaList uses as the
+// Storage folder prefix before the product row exists in the DB.
 function useUploadPath(productId?: string) {
   const [id] = useState(() => productId ?? crypto.randomUUID())
   return id
-}
-
-// Discriminated result so callers (ProductForm) can surface the actual
-// server error — including the 413 "Payload Too Large" case — instead of
-// a silent "Error al subir la imagen".
-type UploadOutcome =
-  | { ok: true; url: string }
-  | { ok: false; error: string; status: number }
-
-async function uploadImageToStorage(file: File, uploadPath: string): Promise<UploadOutcome> {
-  const ext = file.name.split('.').pop() ?? 'jpg'
-  const fd = new FormData()
-  fd.append('file', file)
-  fd.append('path', `${uploadPath}.${ext}`)
-
-  let res: Response
-  try {
-    res = await fetch('/api/admin/upload', { method: 'POST', body: fd })
-  } catch (e) {
-    console.error('[uploadImageToStorage] network error:', e)
-    return { ok: false, error: 'Error de red al subir la imagen.', status: 0 }
-  }
-
-  // 413 sometimes comes from the platform (Vercel proxy) BEFORE hitting our
-  // route — the response body isn't JSON, so parse defensively.
-  if (res.status === 413) {
-    return {
-      ok: false,
-      status: 413,
-      error:
-        'La imagen es demasiado grande para subir (límite ~4.5MB en Vercel Hobby). Usa una imagen más liviana o comprímela antes.',
-    }
-  }
-
-  let json: { url?: string; error?: string; hint?: string } = {}
-  try {
-    json = (await res.json()) as typeof json
-  } catch {
-    // fall through — no parseable body
-  }
-
-  if (!res.ok) {
-    const base = json.error ?? `Error ${res.status} al subir la imagen.`
-    return {
-      ok: false,
-      status: res.status,
-      error: json.hint ? `${base} — ${json.hint}` : base,
-    }
-  }
-
-  if (!json.url) {
-    return { ok: false, status: res.status, error: 'El servidor no devolvió una URL.' }
-  }
-  return { ok: true, url: json.url }
 }
 
 export default function ProductForm({ product, onSubmit }: ProductFormProps) {
@@ -151,24 +112,24 @@ export default function ProductForm({ product, onSubmit }: ProductFormProps) {
     try {
       const cleanedFeatures = form.features.filter((f) => f.trim() !== '')
 
-      // Upload image client-side first — File objects can't cross the server action boundary
-      let resolvedImageUrl = form.imageUrl
-      if (form.imageFile) {
-        const uploaded = await uploadImageToStorage(form.imageFile, uploadPath)
-        if (!uploaded.ok) {
-          // Surface the actual server error (413 payload, Supabase message, etc.)
-          // instead of a generic "Error al subir la imagen".
-          setServerError(uploaded.error)
-          return
-        }
-        resolvedImageUrl = uploaded.url
+      // When creating a new product, require at least one image so the
+      // storefront card doesn't fall back to the placeholder.
+      if (!product && (!form.media || form.media.filter((m) => m.mediaType === 'image').length === 0)) {
+        setServerError('Sube al menos una imagen antes de crear el producto.')
+        setLoading(false)
+        return
       }
+
+      // The primary image goes into products.image_url so the catalog
+      // cards render the right thumbnail without having to JOIN product_media.
+      const resolvedImageUrl = pickPrimaryImageUrl(form.media, form.imageUrl)
 
       const payload: ProductFormData = {
         ...form,
         features: cleanedFeatures,
         imageFile: undefined,       // never send File to server action
         imageUrl: resolvedImageUrl,
+        media: form.media,
       }
 
       // NOTE: `await onSubmit(payload)` only resolves AFTER the server action
@@ -363,17 +324,22 @@ export default function ProductForm({ product, onSubmit }: ProductFormProps) {
         {/* Right column */}
         <div className="space-y-5">
           {product ? (
-            // Edit mode: full gallery (photos + videos) with drag-to-reorder
-            <MediaList productId={product.id} initial={product.media ?? []} />
+            // Edit mode: gallery commits changes to the DB immediately.
+            <MediaList
+              productId={product.id}
+              initial={product.media ?? []}
+              mode="commit"
+            />
           ) : (
-            // New mode: single image is enough to create the product; once
-            // it exists the admin can switch to full gallery in edit mode.
-            <ImageUploader
-              currentUrl={form.imageUrl}
-              onChange={(file) => {
-                setField('imageFile', file ?? undefined)
-                if (!file) setField('imageUrl', undefined)
-              }}
+            // New mode: gallery runs in "draft" — uploads to Storage happen
+            // right away, but product_media rows only get inserted after the
+            // product row is created. uploadPath is a pre-generated UUID
+            // that becomes the new product's id on submit.
+            <MediaList
+              productId={uploadPath}
+              initial={form.media ?? []}
+              mode="draft"
+              onChange={(list) => setField('media', list)}
             />
           )}
 

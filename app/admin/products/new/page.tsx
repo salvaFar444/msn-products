@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { auth } from '@/auth'
 import ProductForm from '@/components/admin/ProductForm'
 import { createProduct } from '@/lib/products'
+import { createMediaRow, syncProductImageCache } from '@/lib/media'
 import { parseProductForm } from '@/lib/validation/productSchema'
 import type { ProductFormData } from '@/types'
 import { revalidatePath } from 'next/cache'
@@ -72,10 +73,45 @@ async function handleCreate(data: ProductFormData): Promise<{ success: boolean; 
     }
   }
 
-  console.log('[CREATE] step=success', { id: result.product.id, slug: result.product.slug })
+  const realProductId = result.product.id
+  console.log('[CREATE] step=success', { id: realProductId, slug: result.product.slug })
+
+  // 4) Commit any draft media uploaded before the product existed.
+  //    In the "new" flow, MediaList runs in draft mode: files are uploaded to
+  //    Storage right away (so we already have public URLs), but no
+  //    product_media rows are inserted until the product itself exists.
+  //    Now that we have a real product id, insert those rows here.
+  //    Files live under a folder named after the pre-generated UUID used
+  //    during the draft; the public URLs still work fine, so we don't need
+  //    to move them.
+  const draftMedia = data.media ?? []
+  if (draftMedia.length > 0) {
+    console.log('[CREATE] step=commit_media', { count: draftMedia.length, realProductId })
+    let committed = 0
+    let failed = 0
+    for (let i = 0; i < draftMedia.length; i++) {
+      const m = draftMedia[i]
+      const row = await createMediaRow({
+        productId: realProductId,
+        url: m.url,
+        mediaType: m.mediaType,
+        position: i, // reindex so positions are strictly 0..n-1
+        isPrimary: m.isPrimary,
+      })
+      if (row) committed++
+      else failed++
+    }
+    console.log('[CREATE] step=commit_media done', { committed, failed })
+
+    // Make sure products.image_url mirrors whichever image ended up primary
+    // (or the first image, if no explicit primary). Without this the home
+    // and catalog cards would keep showing the placeholder.
+    await syncProductImageCache(realProductId)
+  }
 
   revalidatePath('/')
   revalidatePath('/admin/products')
+  revalidatePath(`/producto/${result.product.slug}`)
   return { success: true }
 }
 
