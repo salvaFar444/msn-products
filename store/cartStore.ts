@@ -2,7 +2,7 @@
 
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
-import type { CartStore, Product } from '@/types'
+import type { CartStore, Product, AppliedDiscount } from '@/types'
 import { CART_STORAGE_KEY } from '@/lib/constants'
 
 export const useCartStore = create<CartStore>()(
@@ -11,9 +11,10 @@ export const useCartStore = create<CartStore>()(
       items: [],
       isOpen: false,
       isOrderFormOpen: false,
+      discount: null,
 
       addItem: (product: Product) => {
-        if (product.stock === 0) return // Don't add out-of-stock items
+        if (product.stock === 0) return
 
         const items = get().items
         const existing = items.find((i) => i.product.id === product.id)
@@ -54,7 +55,7 @@ export const useCartStore = create<CartStore>()(
       },
 
       clearCart: () =>
-        set({ items: [], isOrderFormOpen: false }),
+        set({ items: [], isOrderFormOpen: false, discount: null }),
 
       toggleCart: () => set((state) => ({ isOpen: !state.isOpen })),
       openCart: () => set({ isOpen: true }),
@@ -62,11 +63,14 @@ export const useCartStore = create<CartStore>()(
 
       openOrderForm: () => set({ isOrderFormOpen: true }),
       closeOrderForm: () => set({ isOrderFormOpen: false }),
+
+      applyDiscount: (discount: AppliedDiscount) => set({ discount }),
+      removeDiscount: () => set({ discount: null }),
     }),
     {
       name: CART_STORAGE_KEY,
       storage: createJSONStorage(() => localStorage),
-      partialize: (state) => ({ items: state.items }),
+      partialize: (state) => ({ items: state.items, discount: state.discount }),
     }
   )
 )

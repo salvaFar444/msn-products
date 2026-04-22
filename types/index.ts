@@ -55,10 +55,36 @@ export interface CartItem {
   quantity: number
 }
 
+export type DiscountType = 'percentage' | 'fixed'
+
+export interface DiscountCode {
+  id: string
+  code: string
+  description: string | null
+  discountType: DiscountType
+  discountValue: number
+  minOrderAmount: number
+  maxUses: number | null
+  currentUses: number
+  isActive: boolean
+  startsAt: string | null
+  expiresAt: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+export interface AppliedDiscount {
+  code: string
+  discountType: DiscountType
+  discountValue: number
+  amount: number
+}
+
 export interface CartState {
   items: CartItem[]
   isOpen: boolean
   isOrderFormOpen: boolean
+  discount: AppliedDiscount | null
 }
 
 export interface CartActions {
@@ -71,9 +97,45 @@ export interface CartActions {
   closeCart: () => void
   openOrderForm: () => void
   closeOrderForm: () => void
+  applyDiscount: (discount: AppliedDiscount) => void
+  removeDiscount: () => void
 }
 
 export type CartStore = CartState & CartActions
+
+export interface DiscountCodeRow {
+  id: string
+  code: string
+  description: string | null
+  discount_type: 'percentage' | 'fixed'
+  discount_value: number
+  min_order_amount: number
+  max_uses: number | null
+  current_uses: number
+  is_active: boolean
+  starts_at: string | null
+  expires_at: string | null
+  created_at: string
+  updated_at: string
+}
+
+export function rowToDiscountCode(row: DiscountCodeRow): DiscountCode {
+  return {
+    id: row.id,
+    code: row.code,
+    description: row.description,
+    discountType: row.discount_type,
+    discountValue: Number(row.discount_value),
+    minOrderAmount: Number(row.min_order_amount),
+    maxUses: row.max_uses,
+    currentUses: row.current_uses,
+    isActive: row.is_active,
+    startsAt: row.starts_at,
+    expiresAt: row.expires_at,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  }
+}
 
 // ─── Admin Types ──────────────────────────────────────────────────
 

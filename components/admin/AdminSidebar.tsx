@@ -6,6 +6,7 @@ import { signOut } from 'next-auth/react'
 import {
   LayoutDashboard,
   Package,
+  Ticket,
   ExternalLink,
   LogOut,
 } from 'lucide-react'
@@ -21,6 +22,12 @@ const NAV = [
     href: '/admin/products',
     label: 'Productos',
     icon: Package,
+    exact: false,
+  },
+  {
+    href: '/admin/discount-codes',
+    label: 'Cupones',
+    icon: Ticket,
     exact: false,
   },
 ]
@@ -41,7 +48,7 @@ export default function AdminSidebar() {
       ------------------------------------------------------------------ */}
       <div className="mb-8 px-3">
         <p className="text-lg font-bold leading-tight">
-          <span style={{ color: '#E87A00' }}>MSN</span>
+          <span style={{ color: '#FFFFFF' }}>MSN</span>
           <span style={{ color: '#FFFFFF' }}> Admin</span>
         </p>
         <p
@@ -68,9 +75,9 @@ export default function AdminSidebar() {
               className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition-colors"
               style={{
                 backgroundColor: active
-                  ? 'rgba(232,122,0,0.12)'
+                  ? 'rgba(255,255,255,0.08)'
                   : 'transparent',
-                color: active ? '#E87A00' : 'rgba(255,255,255,0.65)',
+                color: active ? '#FFFFFF' : 'rgba(255,255,255,0.65)',
               }}
               aria-current={active ? 'page' : undefined}
             >

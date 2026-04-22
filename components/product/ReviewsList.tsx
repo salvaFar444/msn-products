@@ -15,7 +15,7 @@ function Stars({ value, size = 'sm' }: { value: number; size?: 'sm' | 'md' }) {
         return (
           <Star
             key={i}
-            className={`${px} ${filled ? 'text-accent' : 'text-ink-muted/30'}`}
+            className={`${px} ${filled ? 'text-ink' : 'text-ink-muted/30'}`}
             fill={filled ? 'currentColor' : 'none'}
             strokeWidth={1.8}
             aria-hidden="true"

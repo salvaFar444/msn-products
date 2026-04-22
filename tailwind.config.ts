@@ -10,9 +10,9 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // ── Clean light palette (public store) ─────────────────────
+        // ── Clean black/white palette (public store) ───────────────
         background: '#FFFFFF',
-        surface: '#F7F7F5',
+        surface: '#FAFAFA',
         'surface-elevated': '#FFFFFF',
 
         // ── Text ────────────────────────────────────────────────────
@@ -20,15 +20,15 @@ const config: Config = {
         'ink-strong': '#000000',
         'ink-light': '#525252',
         'ink-muted': '#8A8A8A',
+        'ink-inverted': '#FFFFFF',
 
-        // ── Brand ──────────────────────────────────────────────────
+        // ── Brand (black is the new accent) ────────────────────────
         primary: '#0A0A0A',
-        accent: '#E87A00',
-        'accent-hover': '#C96700',
-        'accent-soft': '#FFF4E6',
+        'primary-hover': '#000000',
 
         // ── Status ─────────────────────────────────────────────────
         success: '#16A34A',
+        'success-soft': '#DCFCE7',
         warning: '#CA8A04',
         danger: '#DC2626',
         whatsapp: '#25D366',
@@ -38,6 +38,9 @@ const config: Config = {
         border: '#E5E5E5',
         'border-strong': '#0A0A0A',
         muted: '#8A8A8A',
+      },
+      backdropBlur: {
+        glass: '16px',
       },
       fontFamily: {
         sans: [
@@ -58,6 +61,8 @@ const config: Config = {
         card: '0 2px 8px rgba(0,0,0,0.04)',
         'card-hover': '0 8px 24px rgba(0,0,0,0.08)',
         elevated: '0 12px 32px rgba(0,0,0,0.12)',
+        glass: '0 8px 32px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.5)',
+        'glass-hover': '0 12px 36px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.5)',
       },
       animation: {
         'slide-in-right': 'slideInRight 0.3s cubic-bezier(0.4, 0, 0.2, 1)',

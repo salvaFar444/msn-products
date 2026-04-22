@@ -46,7 +46,7 @@ export default function Footer() {
               Domicilio gratis y pago contra entrega.
             </p>
             <div className="mt-5 flex items-center gap-2 text-sm text-ink-light">
-              <MapPin className="h-4 w-4 text-accent" aria-hidden="true" />
+              <MapPin className="h-4 w-4 text-ink" aria-hidden="true" />
               <span>
                 {SITE.city}, {SITE.department} — {SITE.country}
               </span>
@@ -83,7 +83,7 @@ export default function Footer() {
                   key={label}
                   className="flex items-center gap-2 text-sm text-ink-light"
                 >
-                  <span className="text-accent">{icon}</span>
+                  <span className="text-ink">{icon}</span>
                   {label}
                 </li>
               ))}
@@ -124,7 +124,7 @@ export default function Footer() {
             &copy; {year} {SITE.name}. Todos los derechos reservados.
           </p>
           <div className="flex items-center gap-1.5 text-xs font-semibold text-ink-light">
-            <Truck className="h-3.5 w-3.5 text-accent" aria-hidden="true" />
+            <Truck className="h-3.5 w-3.5 text-ink" aria-hidden="true" />
             <span>Domicilio gratis en {SITE.city}</span>
           </div>
         </div>

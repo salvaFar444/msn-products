@@ -267,7 +267,7 @@ function ThumbnailButton({
       onMouseEnter={onActivate}
       className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg bg-surface transition-all lg:h-16 lg:w-16"
       style={{
-        border: isActive ? '2px solid #E87A00' : '1px solid rgba(0,0,0,0.08)',
+        border: isActive ? '2px solid #0A0A0A' : '1px solid rgba(0,0,0,0.08)',
         opacity: isActive ? 1 : 0.75,
       }}
     >

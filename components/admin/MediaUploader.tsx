@@ -115,8 +115,8 @@ export default function MediaUploader({
         atLimit || uploading ? 'cursor-not-allowed' : 'cursor-pointer',
       ].join(' ')}
       style={{
-        borderColor: isDragging ? '#E87A00' : 'rgba(255,255,255,0.12)',
-        backgroundColor: isDragging ? 'rgba(232,122,0,0.08)' : '#1A1A1A',
+        borderColor: isDragging ? '#FFFFFF' : 'rgba(255,255,255,0.12)',
+        backgroundColor: isDragging ? 'rgba(255,255,255,0.06)' : '#1A1A1A',
         opacity: atLimit ? 0.5 : 1,
       }}
       role="button"
@@ -138,7 +138,7 @@ export default function MediaUploader({
           </>
         ) : isTile ? (
           <>
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="h-7 w-7" aria-hidden="true" style={{ color: '#E87A00' }}>
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="h-7 w-7" aria-hidden="true" style={{ color: '#FFFFFF' }}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
             </svg>
             <p className="text-[11px] font-semibold leading-tight">
@@ -154,7 +154,7 @@ export default function MediaUploader({
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 16.5V9.75m0 0 3 3m-3-3-3 3M6.75 19.5a4.5 4.5 0 0 1-1.41-8.775 5.25 5.25 0 0 1 10.233-2.33 3 3 0 0 1 3.758 3.848A3.752 3.752 0 0 1 18 19.5H6.75Z" />
             </svg>
             <p className="text-sm">
-              <span className="font-semibold" style={{ color: '#E87A00' }}>Haz clic</span> o arrastra aquí
+              <span className="font-semibold" style={{ color: '#FFFFFF' }}>Haz clic</span> o arrastra aquí
             </p>
             <p className="text-xs" style={{ color: 'rgba(255,255,255,0.45)' }}>
               Imagen ≤{MAX_IMAGE_SIZE_MB}MB · Video ≤{MAX_VIDEO_SIZE_MB}MB · Máx {MAX_MEDIA_PER_PRODUCT} ({currentCount}/{MAX_MEDIA_PER_PRODUCT})

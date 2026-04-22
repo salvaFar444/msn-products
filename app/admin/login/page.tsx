@@ -42,7 +42,7 @@ export default function AdminLoginPage() {
         {/* Logo */}
         <div className="mb-8 text-center">
           <p className="text-2xl font-bold">
-            <span style={{ color: '#E87A00' }}>MSN</span>
+            <span style={{ color: '#FFFFFF' }}>MSN</span>
             <span style={{ color: '#FFFFFF' }}> Admin</span>
           </p>
           <p className="mt-1 text-sm" style={{ color: 'rgba(255,255,255,0.5)' }}>
@@ -102,7 +102,7 @@ export default function AdminLoginPage() {
                   color: '#FFFFFF',
                 }}
                 onFocus={(e) => {
-                  ;(e.currentTarget as HTMLInputElement).style.borderColor = '#E87A00'
+                  ;(e.currentTarget as HTMLInputElement).style.borderColor = '#FFFFFF'
                 }}
                 onBlur={(e) => {
                   ;(e.currentTarget as HTMLInputElement).style.borderColor =
@@ -134,7 +134,7 @@ export default function AdminLoginPage() {
                   color: '#FFFFFF',
                 }}
                 onFocus={(e) => {
-                  ;(e.currentTarget as HTMLInputElement).style.borderColor = '#E87A00'
+                  ;(e.currentTarget as HTMLInputElement).style.borderColor = '#FFFFFF'
                 }}
                 onBlur={(e) => {
                   ;(e.currentTarget as HTMLInputElement).style.borderColor =
@@ -148,16 +148,16 @@ export default function AdminLoginPage() {
               disabled={loading}
               className="flex h-11 w-full items-center justify-center gap-2 rounded-xl text-sm font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               style={{
-                backgroundColor: '#E87A00',
-                color: '#FFFFFF',
-                boxShadow: '0 10px 24px rgba(232,122,0,0.25)',
+                backgroundColor: '#FFFFFF',
+                color: '#000000',
+                boxShadow: '0 10px 24px rgba(255,255,255,0.12)',
               }}
               onMouseEnter={(e) => {
                 if (!loading)
-                  (e.currentTarget as HTMLButtonElement).style.backgroundColor = '#C96700'
+                  (e.currentTarget as HTMLButtonElement).style.backgroundColor = '#E5E5E5'
               }}
               onMouseLeave={(e) => {
-                ;(e.currentTarget as HTMLButtonElement).style.backgroundColor = '#E87A00'
+                ;(e.currentTarget as HTMLButtonElement).style.backgroundColor = '#FFFFFF'
               }}
             >
               {loading && (

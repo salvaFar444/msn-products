@@ -94,7 +94,7 @@ export default function ProductTable({ products, onDelete }: ProductTableProps) 
             <tr>
               <td colSpan={5} className="px-4 py-12 text-center" style={{ color: 'rgba(255,255,255,0.6)' }}>
                 No hay productos.{' '}
-                <Link href="/admin/products/new" className="font-semibold hover:underline" style={{ color: '#E87A00' }}>
+                <Link href="/admin/products/new" className="font-semibold hover:underline" style={{ color: '#FFFFFF' }}>
                   Agregar el primero
                 </Link>
               </td>
@@ -124,7 +124,7 @@ export default function ProductTable({ products, onDelete }: ProductTableProps) 
                     <div>
                       <p className="font-medium text-white leading-snug">{product.name}</p>
                       {product.badge && (
-                        <span className="text-xs font-semibold" style={{ color: '#E87A00' }}>{product.badge}</span>
+                        <span className="text-xs font-semibold" style={{ color: '#FFFFFF' }}>{product.badge}</span>
                       )}
                     </div>
                   </div>

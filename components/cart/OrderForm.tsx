@@ -68,6 +68,9 @@ export default function OrderForm() {
     closeOrderForm,
     items,
     subtotal,
+    discount,
+    discountAmount,
+    total,
     clearCart,
   } = useCart()
 
@@ -147,6 +150,7 @@ export default function OrderForm() {
         quantity: i.quantity,
       })),
       values,
+      discount,
     )
 
     recordSubmission()
@@ -289,9 +293,9 @@ export default function OrderForm() {
                   </div>
                 </div>
               ) : (
-                <div className="flex items-start gap-2.5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+                <div className="chip-glass flex items-start gap-2.5 rounded-xl px-4 py-3 text-sm text-ink-strong">
                   <AlertTriangle
-                    className="h-5 w-5 flex-shrink-0 text-amber-600 mt-0.5"
+                    className="h-5 w-5 flex-shrink-0 text-ink mt-0.5"
                     strokeWidth={2}
                     aria-hidden="true"
                   />
@@ -299,7 +303,7 @@ export default function OrderForm() {
                     <p className="font-semibold">
                       Al estar fuera de Montería, coordinaremos el envío por WhatsApp.
                     </p>
-                    <p className="mt-0.5 text-xs text-amber-800">
+                    <p className="mt-0.5 text-xs text-ink-light">
                       El pago contra entrega solo aplica en Montería.
                     </p>
                   </div>
@@ -308,14 +312,24 @@ export default function OrderForm() {
             </div>
 
             {/* Summary */}
-            <div className="mt-5 rounded-xl bg-surface px-4 py-3">
+            <div className="mt-5 space-y-1.5 rounded-xl bg-surface px-4 py-3">
               <div className="flex items-center justify-between text-sm">
                 <span className="text-ink-light">
                   {items.reduce((t, i) => t + i.quantity, 0)} artículo
                   {items.reduce((t, i) => t + i.quantity, 0) !== 1 ? 's' : ''}
                 </span>
+                <span className="font-semibold text-ink-strong">{formatCOP(subtotal)}</span>
+              </div>
+              {discount && discountAmount > 0 && (
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-ink-light">Cupón {discount.code}</span>
+                  <span className="font-semibold text-ink-strong">−{formatCOP(discountAmount)}</span>
+                </div>
+              )}
+              <div className="flex items-center justify-between border-t border-border pt-1.5">
+                <span className="text-sm font-semibold text-ink-strong">Total</span>
                 <span className="font-serif text-lg font-bold text-ink-strong">
-                  {formatCOP(subtotal)}
+                  {formatCOP(total)}
                 </span>
               </div>
             </div>
@@ -355,9 +369,9 @@ export default function OrderForm() {
               <div className="w-full max-w-sm px-6 text-center">
                 {toast.kind === 'ask-clear' ? (
                   <>
-                    <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-accent-soft">
+                    <div className="chip-glass mx-auto flex h-12 w-12 items-center justify-center rounded-full">
                       <MessageCircle
-                        className="h-6 w-6 text-accent"
+                        className="h-6 w-6 text-ink"
                         strokeWidth={2}
                         aria-hidden="true"
                       />

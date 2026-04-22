@@ -41,7 +41,7 @@ export default async function AdminDashboardPage() {
         <div>
           <p
             className="text-[11px] font-bold uppercase tracking-[0.22em]"
-            style={{ color: '#E87A00' }}
+            style={{ color: 'rgba(255,255,255,0.5)' }}
           >
             MSN Products
           </p>
@@ -55,10 +55,10 @@ export default async function AdminDashboardPage() {
 
         <Link
           href="/admin/products/new"
-          className="inline-flex items-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold text-white transition-colors"
+          className="inline-flex items-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold text-black transition-colors hover:bg-white/90"
           style={{
-            backgroundColor: '#E87A00',
-            boxShadow: '0 10px 28px rgba(232,122,0,0.28)',
+            backgroundColor: '#FFFFFF',
+            boxShadow: '0 10px 28px rgba(255,255,255,0.12)',
           }}
         >
           <Plus className="h-4 w-4" aria-hidden="true" strokeWidth={2.5} />
@@ -75,7 +75,7 @@ export default async function AdminDashboardPage() {
             label="Total productos"
             value={total}
             icon={<Boxes className="h-5 w-5" strokeWidth={2} />}
-            accent="#E87A00"
+            accent="#FFFFFF"
           />
           <StatCard
             label="En stock saludable"
@@ -197,8 +197,8 @@ export default async function AdminDashboardPage() {
                       </span>
                       <Link
                         href={`/admin/products/${p.id}/edit`}
-                        className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold text-white transition-colors"
-                        style={{ backgroundColor: '#E87A00' }}
+                        className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors hover:bg-white/90"
+                        style={{ backgroundColor: '#FFFFFF', color: '#000000' }}
                       >
                         <Edit3 className="h-3 w-3" aria-hidden="true" strokeWidth={2.5} />
                         Actualizar
@@ -302,9 +302,9 @@ function ActionCard({
       rel={external ? 'noopener noreferrer' : undefined}
       className="group relative block rounded-2xl border p-5 transition-colors"
       style={{
-        backgroundColor: highlight ? 'rgba(232,122,0,0.08)' : '#141414',
+        backgroundColor: highlight ? 'rgba(255,255,255,0.06)' : '#141414',
         borderColor: highlight
-          ? 'rgba(232,122,0,0.35)'
+          ? 'rgba(255,255,255,0.3)'
           : 'rgba(255,255,255,0.08)',
       }}
     >
@@ -313,9 +313,9 @@ function ActionCard({
           className="flex h-10 w-10 items-center justify-center rounded-xl"
           style={{
             backgroundColor: highlight
-              ? 'rgba(232,122,0,0.22)'
+              ? 'rgba(255,255,255,0.18)'
               : 'rgba(255,255,255,0.06)',
-            color: highlight ? '#E87A00' : '#FFFFFF',
+            color: '#FFFFFF',
           }}
           aria-hidden="true"
         >
@@ -323,7 +323,7 @@ function ActionCard({
         </span>
         <ArrowUpRight
           className="h-4 w-4 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
-          style={{ color: highlight ? '#E87A00' : 'rgba(255,255,255,0.4)' }}
+          style={{ color: highlight ? '#FFFFFF' : 'rgba(255,255,255,0.4)' }}
           aria-hidden="true"
         />
       </div>

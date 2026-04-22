@@ -28,7 +28,7 @@ export default function CartButton() {
       {itemCount > 0 && (
         <span
           key={popKey}
-          className="absolute -right-1.5 -top-1.5 flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-accent px-1 text-[10px] font-bold text-white shadow-sm animate-cart-pop"
+          className="absolute -right-1.5 -top-1.5 flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-white shadow-sm animate-cart-pop"
           aria-hidden="true"
         >
           {itemCount > 99 ? '99+' : itemCount}

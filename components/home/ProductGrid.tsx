@@ -34,7 +34,7 @@ export default function ProductGrid({ products }: ProductGridProps) {
       <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
         {/* Section header */}
         <div className="mb-10">
-          <p className="text-xs font-extrabold uppercase tracking-[0.22em] text-accent">
+          <p className="text-xs font-extrabold uppercase tracking-[0.22em] text-ink-light">
             Catálogo
           </p>
           <h2

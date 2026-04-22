@@ -6,6 +6,7 @@ import { useCart } from '@/hooks/useCart'
 import { formatCOP } from '@/lib/formatCurrency'
 import CartItem from './CartItem'
 import OrderForm from './OrderForm'
+import DiscountInput from './DiscountInput'
 
 export default function CartDrawer() {
   const {
@@ -14,6 +15,9 @@ export default function CartDrawer() {
     items,
     isEmpty,
     subtotal,
+    discount,
+    discountAmount,
+    total,
     clearCart,
     openOrderForm,
   } = useCart()
@@ -64,7 +68,7 @@ export default function CartDrawer() {
               Tu carrito
             </h2>
             {!isEmpty && (
-              <span className="flex h-6 min-w-[1.5rem] items-center justify-center rounded-full bg-accent px-2 text-xs font-bold text-white">
+              <span className="flex h-6 min-w-[1.5rem] items-center justify-center rounded-full bg-primary px-2 text-xs font-bold text-white">
                 {items.reduce((t, i) => t + i.quantity, 0)}
               </span>
             )}
@@ -116,17 +120,34 @@ export default function CartDrawer() {
         {/* Footer */}
         {!isEmpty && (
           <div className="space-y-4 border-t border-border bg-surface px-5 py-5">
-            {/* Subtotal */}
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-ink-light">Subtotal</span>
-              <span className="font-serif text-xl font-bold text-ink-strong">
-                {formatCOP(subtotal)}
-              </span>
+            <DiscountInput />
+
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-ink-light">Subtotal</span>
+                <span className="font-semibold text-ink-strong">{formatCOP(subtotal)}</span>
+              </div>
+              {discount && discountAmount > 0 && (
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-ink-light">
+                    Descuento ({discount.code})
+                  </span>
+                  <span className="font-semibold text-ink-strong">
+                    −{formatCOP(discountAmount)}
+                  </span>
+                </div>
+              )}
+              <div className="flex items-center justify-between border-t border-border pt-1.5">
+                <span className="text-sm font-semibold text-ink-strong">Total</span>
+                <span className="font-serif text-xl font-bold text-ink-strong">
+                  {formatCOP(total)}
+                </span>
+              </div>
             </div>
 
             {/* Informative strip */}
-            <div className="flex items-start gap-2 rounded-lg bg-accent-soft px-3 py-2.5 text-xs text-ink-strong">
-              <Truck className="h-4 w-4 flex-shrink-0 text-accent mt-0.5" strokeWidth={2} aria-hidden="true" />
+            <div className="chip-glass flex items-start gap-2 rounded-lg px-3 py-2.5 text-xs text-ink-strong">
+              <Truck className="h-4 w-4 flex-shrink-0 text-ink mt-0.5" strokeWidth={2} aria-hidden="true" />
               <p className="leading-snug">
                 Domicilio gratis y pago contra entrega en Montería · Fuera de Montería
                 coordinamos el envío por WhatsApp.
@@ -136,7 +157,7 @@ export default function CartDrawer() {
             {/* Single CTA — Generar orden */}
             <button
               onClick={openOrderForm}
-              className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-accent text-sm font-semibold text-white shadow-sm transition-all hover:bg-accent-hover active:scale-[0.98]"
+              className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-primary text-sm font-semibold text-white shadow-sm transition-all hover:bg-black active:scale-[0.98]"
             >
               Generar orden
               <ArrowRight className="h-4 w-4" strokeWidth={2.5} aria-hidden="true" />

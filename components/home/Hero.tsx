@@ -41,30 +41,30 @@ const fadeUp = {
 export default function Hero() {
   return (
     <section className="relative overflow-hidden bg-background">
-      {/* Very subtle accent glow */}
+      {/* Subtle mono glow — just adds depth behind the headline */}
       <div
         aria-hidden="true"
         className="pointer-events-none absolute -top-40 left-1/2 h-[520px] w-[520px] -translate-x-1/2 rounded-full opacity-40 blur-3xl"
         style={{
           background:
-            'radial-gradient(circle, rgba(232,122,0,0.12) 0%, transparent 70%)',
+            'radial-gradient(circle, rgba(10,10,10,0.08) 0%, transparent 70%)',
         }}
       />
 
       <div className="relative mx-auto max-w-5xl px-5 pt-20 pb-20 text-center sm:px-8 sm:pt-24 sm:pb-28">
-        {/* Eyebrow pill */}
+        {/* Eyebrow pill — glass */}
         <motion.div
           variants={fadeUp}
           initial="hidden"
           animate="show"
           custom={0}
-          className="inline-flex items-center gap-2 rounded-full border border-accent/30 bg-accent-soft px-4 py-1.5"
+          className="chip-glass inline-flex items-center gap-2 rounded-full px-4 py-1.5"
         >
           <span className="relative flex h-2 w-2">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent opacity-60" />
-            <span className="relative inline-flex h-2 w-2 rounded-full bg-accent" />
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-ink opacity-50" />
+            <span className="relative inline-flex h-2 w-2 rounded-full bg-ink" />
           </span>
-          <span className="text-[11px] font-bold uppercase tracking-[0.15em] text-accent-hover">
+          <span className="text-[11px] font-bold uppercase tracking-[0.15em] text-ink">
             {SITE.city}, {SITE.department}
           </span>
         </motion.div>
@@ -80,7 +80,7 @@ export default function Hero() {
         >
           Tecnología que llega
           <br />
-          <span className="text-accent">a tu puerta.</span>
+          <span className="italic text-ink">a tu puerta.</span>
         </motion.h1>
 
         {/* Subheadline */}
@@ -111,7 +111,7 @@ export default function Hero() {
         >
           <a
             href="#products"
-            className="btn-primary inline-flex w-full items-center justify-center gap-2 rounded-full px-8 py-4 text-sm font-bold tracking-wide uppercase active:scale-[0.97] sm:w-auto"
+            className="btn-solid-black inline-flex w-full items-center justify-center gap-2 rounded-full px-8 py-4 text-sm font-bold tracking-wide uppercase sm:w-auto"
           >
             Ver productos
             <ArrowDown className="h-4 w-4" aria-hidden="true" />
@@ -120,7 +120,7 @@ export default function Hero() {
             href={WHATSAPP_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-whatsapp hover:bg-whatsapp-hover px-8 py-4 text-sm font-bold tracking-wide uppercase text-white transition-colors active:scale-[0.97] sm:w-auto"
+            className="btn-solid-white inline-flex w-full items-center justify-center gap-2 rounded-full px-8 py-4 text-sm font-bold tracking-wide uppercase sm:w-auto"
           >
             <WhatsAppGlyph />
             Pedir por WhatsApp
@@ -138,10 +138,10 @@ export default function Hero() {
           {BADGES.map(({ icon: Icon, label }) => (
             <div
               key={label}
-              className="flex items-center gap-2 rounded-full border border-border bg-white px-3 py-2 shadow-card sm:border-0 sm:bg-transparent sm:shadow-none"
+              className="chip-glass flex items-center gap-2 rounded-full px-3 py-2 sm:shadow-none"
             >
               <Icon
-                className="h-4 w-4 flex-shrink-0 text-accent"
+                className="h-4 w-4 flex-shrink-0 text-ink"
                 aria-hidden="true"
                 strokeWidth={2.2}
               />

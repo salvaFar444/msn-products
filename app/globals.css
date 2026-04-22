@@ -2,11 +2,11 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ─── CSS Custom Properties — Clean light palette ─────────────── */
+/* ─── CSS Custom Properties — Strict black/white + glassmorphism ─ */
 :root {
   /* Backgrounds */
   --color-background: #FFFFFF;
-  --color-surface: #F7F7F5;
+  --color-surface: #FAFAFA;
   --color-surface-elevated: #FFFFFF;
 
   /* Text */
@@ -14,15 +14,27 @@
   --color-text-strong: #000000;
   --color-text-light: #525252;
   --color-text-muted: #8A8A8A;
+  --color-text-inverted: #FFFFFF;
 
-  /* Brand */
+  /* Brand — black is the new accent */
   --color-primary: #0A0A0A;
-  --color-accent: #E87A00;
-  --color-accent-hover: #C96700;
-  --color-accent-soft: #FFF4E6;
+  --color-primary-hover: #000000;
+
+  /* Glassmorphism tokens (replaces everywhere we used to use orange) */
+  --glass-bg: rgba(255, 255, 255, 0.6);
+  --glass-bg-strong: rgba(255, 255, 255, 0.8);
+  --glass-bg-dark: rgba(10, 10, 10, 0.75);
+  --glass-border: rgba(255, 255, 255, 0.35);
+  --glass-border-strong: rgba(255, 255, 255, 0.55);
+  --glass-border-dark: rgba(0, 0, 0, 0.15);
+  --glass-blur: blur(16px);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+  --glass-shadow-hover: 0 12px 36px rgba(0, 0, 0, 0.12);
+  --glass-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.5);
 
   /* Status */
   --color-success: #16A34A;
+  --color-success-soft: #DCFCE7;
   --color-danger: #DC2626;
   --color-warning: #CA8A04;
   --color-whatsapp: #25D366;
@@ -108,15 +120,15 @@ h1, h2, h3, h4 {
   background: var(--color-primary);
 }
 
-/* ─── Selection — accent orange ───────────────────────────────── */
+/* ─── Selection — pure black ──────────────────────────────────── */
 ::selection {
-  background-color: rgba(232, 122, 0, 0.2);
+  background-color: rgba(10, 10, 10, 0.15);
   color: var(--color-text-strong);
 }
 
-/* ─── Focus Ring ──────────────────────────────────────────────── */
+/* ─── Focus Ring (black, not orange) ──────────────────────────── */
 :focus-visible {
-  outline: 2px solid var(--color-accent);
+  outline: 2px solid var(--color-primary);
   outline-offset: 2px;
   border-radius: 4px;
 }
@@ -151,24 +163,99 @@ h1, h2, h3, h4 {
     box-shadow: var(--shadow-card-hover);
   }
 
+  /* ── Legacy aliases kept for any unmigrated call-site ────── */
   .btn-primary {
-    background-color: var(--color-accent);
-    color: #FFFFFF;
+    background-color: var(--color-primary);
+    color: var(--color-text-inverted);
     font-weight: 700;
     transition: background-color 0.2s ease, transform 0.15s ease;
   }
   .btn-primary:hover {
-    background-color: var(--color-accent-hover);
+    background-color: #000000;
   }
 
   .btn-secondary {
-    background-color: var(--color-primary);
-    color: #FFFFFF;
+    background-color: var(--color-background);
+    color: var(--color-text);
+    border: 1.5px solid var(--color-text);
     font-weight: 700;
     transition: opacity 0.2s ease, transform 0.15s ease;
   }
   .btn-secondary:hover {
-    opacity: 0.9;
+    background-color: var(--color-text);
+    color: var(--color-text-inverted);
+  }
+
+  /* ── Glassmorphism variants — replace accent CTAs ───────── */
+  .btn-glass-light {
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow), var(--glass-highlight);
+    color: var(--color-text);
+    font-weight: 600;
+    transition: all 0.25s ease;
+  }
+
+  .btn-glass-light:hover {
+    background: var(--glass-bg-strong);
+    transform: translateY(-1px);
+    box-shadow: var(--glass-shadow-hover), var(--glass-highlight);
+  }
+
+  .btn-glass-dark {
+    background: var(--glass-bg-dark);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
+    color: var(--color-text-inverted);
+    font-weight: 600;
+    transition: all 0.25s ease;
+  }
+
+  .btn-glass-dark:hover {
+    background: rgba(10, 10, 10, 0.9);
+    transform: translateY(-1px);
+  }
+
+  .btn-solid-black {
+    background: var(--color-primary);
+    color: var(--color-text-inverted);
+    border: 1px solid var(--color-primary);
+    font-weight: 700;
+    transition: all 0.2s ease;
+  }
+
+  .btn-solid-black:hover {
+    background: #000000;
+    transform: translateY(-1px);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.18);
+  }
+
+  .btn-solid-white {
+    background: var(--color-background);
+    color: var(--color-text);
+    border: 1.5px solid var(--color-text);
+    font-weight: 700;
+    transition: all 0.2s ease;
+  }
+
+  .btn-solid-white:hover {
+    background: var(--color-text);
+    color: var(--color-text-inverted);
+    transform: translateY(-1px);
+  }
+
+  /* Reusable glass chip / badge class */
+  .chip-glass {
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--glass-border);
+    color: var(--color-text);
+    box-shadow: var(--glass-highlight);
   }
 
   /* Scroll-reveal */
@@ -201,5 +288,16 @@ h1, h2, h3, h4 {
 @media (max-width: 768px) {
   .admin-sidebar {
     display: none;
+  }
+}
+
+/* ─── Glass fallback for browsers without backdrop-filter ─────── */
+@supports not ((backdrop-filter: blur(16px)) or (-webkit-backdrop-filter: blur(16px))) {
+  .btn-glass-light,
+  .chip-glass {
+    background: rgba(255, 255, 255, 0.95);
+  }
+  .btn-glass-dark {
+    background: rgba(10, 10, 10, 0.95);
   }
 }

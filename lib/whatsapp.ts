@@ -1,6 +1,7 @@
 import { SITE } from '@/data/site'
 import { sanitizeText, sanitizePhone } from './sanitize'
 import { formatCOP } from './formatCurrency'
+import type { AppliedDiscount } from '@/types'
 
 export interface OrderCartItem {
   name: string
@@ -16,7 +17,6 @@ export interface OrderFormData {
   phone: string
 }
 
-/** Normalize a string for comparison — lowercase, no accents, trimmed. */
 export function normalizeCity(str: string): string {
   return str
     .normalize('NFD')
@@ -29,17 +29,11 @@ export function isMonteria(city: string): boolean {
   return normalizeCity(city) === 'monteria'
 }
 
-/**
- * Builds a WhatsApp URL with a pre-filled order message.
- * Message content adapts based on whether the delivery city is Montería:
- *  - Montería  → promises free delivery + cash on delivery
- *  - Otherwise → asks to coordinate shipping & payment over WhatsApp
- */
 export function buildWhatsAppOrderUrl(
   items: OrderCartItem[],
-  form: OrderFormData
+  form: OrderFormData,
+  discount?: AppliedDiscount | null
 ): string {
-  // Build product lines
   const productLines = items
     .map((i) => {
       const safeName = sanitizeText(i.name)
@@ -49,15 +43,15 @@ export function buildWhatsAppOrderUrl(
     })
     .join('\n')
 
-  const total = items.reduce((sum, i) => sum + i.price * i.quantity, 0)
+  const subtotal = items.reduce((sum, i) => sum + i.price * i.quantity, 0)
+  const discountAmount = discount ? Math.min(discount.amount, subtotal) : 0
+  const total = Math.max(0, subtotal - discountAmount)
   const inMonteria = isMonteria(form.city)
 
-  // Closing line varies by city
   const paymentLine = inMonteria
     ? '💵 Pago contra entrega (Montería).\n🚚 Domicilio gratis.'
     : '📦 Envío fuera de Montería: coordinemos método de envío y forma de pago por aquí.'
 
-  // Sanitize every field before using it
   const safeForm = {
     fullName: sanitizeText(form.fullName),
     city: sanitizeText(form.city),
@@ -66,12 +60,23 @@ export function buildWhatsAppOrderUrl(
     phone: sanitizePhone(form.phone),
   }
 
+  let couponSection = ''
+  let totalsSection = `💰 *TOTAL: ${formatCOP(total)}*`
+  if (discount && discountAmount > 0) {
+    const valueLabel =
+      discount.discountType === 'percentage'
+        ? `${discount.discountValue}%`
+        : formatCOP(discount.discountValue)
+    couponSection = `\n🏷️ *CUPÓN APLICADO:*\nCódigo: ${sanitizeText(discount.code)} (${valueLabel})\nDescuento: −${formatCOP(discountAmount)}\n`
+    totalsSection = `🧾 Subtotal: ${formatCOP(subtotal)}\n💰 *TOTAL: ${formatCOP(total)}*`
+  }
+
   const message = `Hola MSN Products 👋, quiero generar la siguiente orden:
 
 🛍️ *PRODUCTOS:*
 ${productLines}
-
-💰 *TOTAL: ${formatCOP(total)}*
+${couponSection}
+${totalsSection}
 
 📍 *DATOS DE ENVÍO:*
 Nombre: ${safeForm.fullName}
@@ -86,7 +91,6 @@ ${paymentLine}
   return `https://wa.me/${SITE.whatsappNumber}?text=${encodeURIComponent(message)}`
 }
 
-/** Simple WhatsApp URL with custom text. */
 export function buildWhatsAppUrl(text: string): string {
   return `https://wa.me/${SITE.whatsappNumber}?text=${encodeURIComponent(text)}`
 }

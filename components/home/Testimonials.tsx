@@ -11,7 +11,7 @@ export default function Testimonials() {
       <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
         {/* Section header */}
         <div className="mb-10 text-center">
-          <p className="text-xs font-extrabold uppercase tracking-[0.22em] text-accent">
+          <p className="text-xs font-extrabold uppercase tracking-[0.22em] text-ink-light">
             Reseñas
           </p>
           <h2 className="mt-3 text-3xl font-extrabold text-ink-strong sm:text-4xl">
@@ -41,7 +41,7 @@ export default function Testimonials() {
                 {Array.from({ length: review.stars }).map((_, idx) => (
                   <Star
                     key={idx}
-                    className="h-4 w-4 fill-accent text-accent"
+                    className="h-4 w-4 fill-ink text-ink"
                     aria-hidden="true"
                   />
                 ))}
@@ -55,7 +55,7 @@ export default function Testimonials() {
               {/* Author */}
               <div className="flex items-center gap-3 border-t border-border pt-4">
                 <div
-                  className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-accent-soft text-sm font-extrabold text-accent"
+                  className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-ink text-sm font-extrabold text-white"
                   aria-hidden="true"
                 >
                   {review.name[0]}

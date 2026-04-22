@@ -138,8 +138,8 @@ function SortableCard({
           aria-pressed={media.isPrimary}
           className="absolute bottom-1.5 left-1.5 flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-bold uppercase backdrop-blur-sm transition-colors disabled:cursor-not-allowed disabled:opacity-40"
           style={{
-            backgroundColor: media.isPrimary ? '#E87A00' : 'rgba(0,0,0,0.7)',
-            color: '#FFFFFF',
+            backgroundColor: media.isPrimary ? '#FFFFFF' : 'rgba(0,0,0,0.7)',
+            color: media.isPrimary ? '#000000' : '#FFFFFF',
           }}
         >
           <Star

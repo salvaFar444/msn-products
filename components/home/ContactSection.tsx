@@ -22,7 +22,7 @@ export default function ContactSection() {
           <div className="grid grid-cols-1 gap-10 md:grid-cols-2 md:items-center">
             {/* Copy */}
             <div>
-              <p className="text-xs font-extrabold uppercase tracking-[0.22em] text-accent">
+              <p className="text-xs font-extrabold uppercase tracking-[0.22em] text-ink-light">
                 Contáctanos
               </p>
               <h2 className="mt-3 text-3xl font-extrabold text-ink-strong sm:text-4xl">
@@ -35,7 +35,7 @@ export default function ContactSection() {
               </p>
 
               <div className="mt-6 flex items-center gap-2 text-sm font-semibold text-ink-light">
-                <MapPin className="h-4 w-4 text-accent" aria-hidden="true" />
+                <MapPin className="h-4 w-4 text-ink" aria-hidden="true" />
                 <span>
                   {SITE.city}, {SITE.department} — {SITE.country}
                 </span>
@@ -86,7 +86,7 @@ export default function ContactSection() {
                 className="group flex items-center justify-between gap-4 rounded-2xl border border-border bg-white px-6 py-5 text-ink-strong transition-all hover:border-ink hover:shadow-card"
               >
                 <div className="flex items-center gap-3">
-                  <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-accent-soft text-accent">
+                  <div className="chip-glass flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full text-ink">
                     <Instagram
                       className="h-5 w-5"
                       aria-hidden="true"

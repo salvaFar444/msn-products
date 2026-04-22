@@ -12,13 +12,14 @@ interface ProductCardProps {
   product: Product
 }
 
-// Maps common Spanish badge strings to a visual variant
+// Maps common Spanish badge strings to a visual variant. New palette: only
+// black, white, and semantic status colors (success/danger) — no accent.
 function getBadgeStyle(badge: string): string {
   const b = badge.toLowerCase()
   if (b.includes('nuevo'))
     return 'bg-success/10 text-success border-success/30'
   if (b.includes('vendido'))
-    return 'bg-accent text-white border-accent'
+    return 'bg-primary text-white border-primary'
   if (b.includes('últim') || b.includes('ultim'))
     return 'bg-danger/10 text-danger border-danger/30'
   return 'bg-primary text-white border-primary'
@@ -48,7 +49,7 @@ export default function ProductCard({ product }: ProductCardProps) {
     <Link
       href={href}
       aria-label={`Ver ${product.name}`}
-      className="group block h-full focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-2xl"
+      className="group block h-full focus:outline-none focus-visible:ring-2 focus-visible:ring-ink focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-2xl"
     >
       <article className="card card-hover flex h-full flex-col overflow-hidden">
         {/* Image */}
@@ -108,7 +109,7 @@ export default function ProductCard({ product }: ProductCardProps) {
         {/* Content */}
         <div className="flex flex-1 flex-col p-5">
           {/* Category label */}
-          <p className="mb-1.5 text-[10px] font-extrabold uppercase tracking-[0.18em] text-accent">
+          <p className="mb-1.5 text-[10px] font-extrabold uppercase tracking-[0.18em] text-ink-light">
             {product.category}
           </p>
 
@@ -131,7 +132,7 @@ export default function ProductCard({ product }: ProductCardProps) {
                   className="flex items-center gap-2 text-xs text-ink-light"
                 >
                   <Check
-                    className="h-3.5 w-3.5 flex-shrink-0 text-accent"
+                    className="h-3.5 w-3.5 flex-shrink-0 text-ink"
                     aria-hidden="true"
                     strokeWidth={3}
                   />

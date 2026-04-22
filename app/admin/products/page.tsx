@@ -28,10 +28,10 @@ export default async function AdminProductsPage() {
         </div>
         <Link
           href="/admin/products/new"
-          className="inline-flex items-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#C96700]"
+          className="inline-flex items-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold text-black transition-colors hover:bg-white/90"
           style={{
-            backgroundColor: '#E87A00',
-            boxShadow: '0 10px 28px rgba(232,122,0,0.28)',
+            backgroundColor: '#FFFFFF',
+            boxShadow: '0 10px 28px rgba(255,255,255,0.12)',
           }}
         >
           <svg

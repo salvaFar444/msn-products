@@ -30,7 +30,7 @@ export default function TrustSection() {
     <section className="bg-surface">
       <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
         <div className="mb-12 text-center">
-          <p className="text-xs font-extrabold uppercase tracking-[0.22em] text-accent">
+          <p className="text-xs font-extrabold uppercase tracking-[0.22em] text-ink-light">
             ¿Por qué elegirnos?
           </p>
           <h2 className="mt-3 text-3xl font-extrabold sm:text-4xl">
@@ -52,7 +52,7 @@ export default function TrustSection() {
               }}
               className="card card-hover flex flex-col gap-4 p-7"
             >
-              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-accent-soft text-accent">
+              <div className="chip-glass flex h-14 w-14 items-center justify-center rounded-2xl text-ink">
                 <pillar.icon className="h-7 w-7" strokeWidth={2} aria-hidden="true" />
               </div>
               <h3 className="text-xl font-extrabold text-ink-strong">

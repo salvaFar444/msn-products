@@ -143,7 +143,7 @@ export default async function ProductDetailPage({ params }: Props) {
         />
 
         <div className="space-y-5">
-          <p className="text-[11px] font-extrabold uppercase tracking-[0.18em] text-accent">
+          <p className="text-[11px] font-extrabold uppercase tracking-[0.18em] text-ink-light">
             {product.category}
           </p>
 
@@ -161,7 +161,7 @@ export default async function ProductDetailPage({ params }: Props) {
               {product.features.map((f) => (
                 <li key={f} className="flex items-start gap-2 text-sm text-ink">
                   <Check
-                    className="mt-0.5 h-4 w-4 flex-shrink-0 text-accent"
+                    className="mt-0.5 h-4 w-4 flex-shrink-0 text-ink"
                     aria-hidden="true"
                     strokeWidth={3}
                   />

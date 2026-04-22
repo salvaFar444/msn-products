@@ -170,13 +170,8 @@ export default function ProductForm({ product, onSubmit }: ProductFormProps) {
     }
   }
 
-  // Admin palette (matches login, sidebar and dashboard):
-  //   bg       #1A1A1A
-  //   border   rgba(255,255,255,0.1)
-  //   text     #FFFFFF
-  //   focus    #E87A00
   const inputClass =
-    'w-full rounded-xl border border-white/10 bg-[#1A1A1A] px-4 py-3 text-sm text-white placeholder:text-white/35 outline-none transition-colors focus:border-[#E87A00] focus:ring-2 focus:ring-[#E87A00]/20'
+    'w-full rounded-xl border border-white/10 bg-[#1A1A1A] px-4 py-3 text-sm text-white placeholder:text-white/35 outline-none transition-colors focus:border-white focus:ring-2 focus:ring-white/20'
   const labelClass = 'mb-1.5 block text-sm font-medium text-white'
 
   return (
@@ -372,7 +367,7 @@ export default function ProductForm({ product, onSubmit }: ProductFormProps) {
               <button
                 type="button"
                 onClick={addFeature}
-                className="flex items-center gap-2 text-sm font-semibold text-[#E87A00] transition-colors hover:text-[#C96700]"
+                className="flex items-center gap-2 text-sm font-semibold text-white/80 transition-colors hover:text-white"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="h-4 w-4" aria-hidden="true">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
@@ -400,8 +395,8 @@ export default function ProductForm({ product, onSubmit }: ProductFormProps) {
         <button
           type="submit"
           disabled={loading || saved}
-          className="flex items-center gap-2 rounded-xl bg-[#E87A00] px-6 py-2.5 text-sm font-semibold text-white shadow-lg transition-colors hover:bg-[#C96700] disabled:cursor-not-allowed disabled:opacity-50"
-          style={{ boxShadow: '0 10px 28px rgba(232,122,0,0.28)' }}
+          className="flex items-center gap-2 rounded-xl bg-white px-6 py-2.5 text-sm font-semibold text-black shadow-lg transition-colors hover:bg-white/90 disabled:cursor-not-allowed disabled:opacity-50"
+          style={{ boxShadow: '0 10px 28px rgba(255,255,255,0.12)' }}
         >
           {loading && (
             <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
