@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS products (
   id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name        TEXT NOT NULL,
   short_name  TEXT NOT NULL,
-  category    TEXT NOT NULL CHECK (category IN ('Audio', 'Wearables', 'Cables', 'Cargadores')),
+  category    TEXT NOT NULL CHECK (category IN ('Audio', 'Relojes Inteligentes', 'Cables', 'Cargadores', 'Gaming', 'Hogar Tech', 'Cuidado Personal')),
   price       INTEGER NOT NULL CHECK (price > 0),
   description TEXT,
   image_url   TEXT DEFAULT '/img.jpg',

@@ -4,7 +4,7 @@ import ProductGrid from '@/components/home/ProductGrid'
 import TrustSection from '@/components/home/TrustSection'
 import Testimonials from '@/components/home/Testimonials'
 import ContactSection from '@/components/home/ContactSection'
-import { getAllProducts } from '@/lib/products'
+import { getAllProducts, getFeaturedProduct } from '@/lib/products'
 import { SITE } from '@/data/site'
 import { SITE_NAME, SITE_DESCRIPTION, PRODUCTS_REVALIDATE_SECONDS } from '@/lib/constants'
 
@@ -16,13 +16,16 @@ export const metadata: Metadata = {
 }
 
 export default async function HomePage() {
-  const products = await getAllProducts()
+  const [products, featured] = await Promise.all([
+    getAllProducts(),
+    getFeaturedProduct(),
+  ])
 
   return (
     <>
-      <Hero />
-      <TrustSection />
+      <Hero featured={featured} />
       <ProductGrid products={products} />
+      <TrustSection />
       <Testimonials />
       <ContactSection />
     </>

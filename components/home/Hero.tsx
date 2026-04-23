@@ -1,8 +1,10 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { ArrowDown, MapPin, ShieldCheck, Star, Wallet } from 'lucide-react'
+import { ArrowDown, MapPin, ShieldCheck, Wallet } from 'lucide-react'
 import { SITE, WHATSAPP_URL } from '@/data/site'
+import HeroProduct from './HeroProduct'
+import type { Product } from '@/types'
 
 const WhatsAppGlyph = () => (
   <svg
@@ -17,12 +19,11 @@ const WhatsAppGlyph = () => (
 
 const BADGES = [
   { icon: MapPin, label: `Domicilio gratis en ${SITE.city}` },
-  { icon: Wallet, label: `Pago contra entrega en ${SITE.city}` },
+  { icon: Wallet, label: 'Pago contra entrega' },
   {
     icon: ShieldCheck,
-    label: `Garantía de ${SITE.warrantyMonths} meses`,
+    label: `Garantía ${SITE.warrantyMonths} meses`,
   },
-  { icon: Star, label: 'Atención directa por WhatsApp' },
 ]
 
 const fadeUp = {
@@ -32,125 +33,142 @@ const fadeUp = {
     y: 0,
     transition: {
       delay: 0.08 * i,
-      duration: 0.7,
+      duration: 0.8,
       ease: [0.22, 1, 0.36, 1],
     },
   }),
 }
 
-export default function Hero() {
+interface HeroProps {
+  featured: Product | null
+}
+
+export default function Hero({ featured }: HeroProps) {
   return (
-    <section className="relative overflow-hidden bg-background">
-      {/* Subtle mono glow — just adds depth behind the headline */}
+    <section className="relative overflow-hidden hero-atmosphere">
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute -top-40 left-1/2 h-[520px] w-[520px] -translate-x-1/2 rounded-full opacity-40 blur-3xl"
+        className="pointer-events-none absolute -top-40 -left-20 h-[520px] w-[520px] rounded-full opacity-60 blur-3xl"
         style={{
           background:
             'radial-gradient(circle, rgba(10,10,10,0.08) 0%, transparent 70%)',
         }}
       />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -bottom-32 -right-20 h-[560px] w-[560px] rounded-full opacity-50 blur-3xl"
+        style={{
+          background:
+            'radial-gradient(circle, rgba(10,10,10,0.06) 0%, transparent 72%)',
+        }}
+      />
 
-      <div className="relative mx-auto max-w-5xl px-5 pt-20 pb-20 text-center sm:px-8 sm:pt-24 sm:pb-28">
-        {/* Eyebrow pill — glass */}
-        <motion.div
-          variants={fadeUp}
-          initial="hidden"
-          animate="show"
-          custom={0}
-          className="chip-glass inline-flex items-center gap-2 rounded-full px-4 py-1.5"
-        >
-          <span className="relative flex h-2 w-2">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-ink opacity-50" />
-            <span className="relative inline-flex h-2 w-2 rounded-full bg-ink" />
-          </span>
-          <span className="text-[11px] font-bold uppercase tracking-[0.15em] text-ink">
-            {SITE.city}, {SITE.department}
-          </span>
-        </motion.div>
-
-        {/* Headline */}
-        <motion.h1
-          variants={fadeUp}
-          initial="hidden"
-          animate="show"
-          custom={1}
-          className="mt-8 font-display font-extrabold leading-[1.05] tracking-tight text-ink-strong"
-          style={{ fontSize: 'clamp(2.6rem, 7.5vw, 5.5rem)' }}
-        >
-          Tecnología que llega
-          <br />
-          <span className="italic text-ink">a tu puerta.</span>
-        </motion.h1>
-
-        {/* Subheadline */}
-        <motion.p
-          variants={fadeUp}
-          initial="hidden"
-          animate="show"
-          custom={2}
-          className="mx-auto mt-6 max-w-2xl text-base font-medium leading-relaxed text-ink-light sm:text-lg"
-        >
-          Accesorios tecnológicos en {SITE.city} con domicilio gratis y pago
-          contra entrega. Paga solo cuando recibas tu pedido. Garantía de{' '}
-          {SITE.warrantyMonths} meses en todos nuestros productos.
-          <br className="hidden sm:block" />
-          <span className="text-ink-muted">
-            ¿Vives fuera de {SITE.city}? Escríbenos por WhatsApp y coordinamos
-            envío.
-          </span>
-        </motion.p>
-
-        {/* CTAs */}
-        <motion.div
-          variants={fadeUp}
-          initial="hidden"
-          animate="show"
-          custom={3}
-          className="mt-10 flex flex-col items-center gap-3 sm:flex-row sm:justify-center"
-        >
-          <a
-            href="#products"
-            className="btn-solid-black inline-flex w-full items-center justify-center gap-2 rounded-full px-8 py-4 text-sm font-bold tracking-wide uppercase sm:w-auto"
+      <div className="relative mx-auto grid max-w-7xl grid-cols-1 items-center gap-12 px-5 pt-16 pb-20 sm:px-8 sm:pt-20 sm:pb-28 lg:grid-cols-12 lg:gap-16 lg:pt-24">
+        <div className="order-2 text-center lg:order-1 lg:col-span-6 lg:text-left">
+          <motion.div
+            variants={fadeUp}
+            initial="hidden"
+            animate="show"
+            custom={0}
+            className="chip-glass inline-flex items-center gap-2 rounded-full px-4 py-1.5"
           >
-            Ver productos
-            <ArrowDown className="h-4 w-4" aria-hidden="true" />
-          </a>
-          <a
-            href={WHATSAPP_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="btn-solid-white inline-flex w-full items-center justify-center gap-2 rounded-full px-8 py-4 text-sm font-bold tracking-wide uppercase sm:w-auto"
-          >
-            <WhatsAppGlyph />
-            Pedir por WhatsApp
-          </a>
-        </motion.div>
+            <span className="relative flex h-2 w-2">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[color:var(--text-primary)] opacity-50" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-[color:var(--text-primary)]" />
+            </span>
+            <span className="text-[11px] font-bold uppercase tracking-[0.16em] text-[color:var(--text-primary)]">
+              {SITE.city}, {SITE.department}
+            </span>
+          </motion.div>
 
-        {/* Badges */}
-        <motion.div
-          variants={fadeUp}
-          initial="hidden"
-          animate="show"
-          custom={4}
-          className="mt-12 grid grid-cols-2 gap-3 sm:flex sm:flex-wrap sm:items-center sm:justify-center sm:gap-x-6 sm:gap-y-3"
-        >
-          {BADGES.map(({ icon: Icon, label }) => (
-            <div
-              key={label}
-              className="chip-glass flex items-center gap-2 rounded-full px-3 py-2 sm:shadow-none"
+          <motion.h1
+            variants={fadeUp}
+            initial="hidden"
+            animate="show"
+            custom={1}
+            className="mt-7 font-display leading-[0.98] tracking-[-0.02em] text-[color:var(--text-strong)]"
+            style={{ fontSize: 'clamp(2.8rem, 7.4vw, 5.6rem)' }}
+          >
+            <span style={{ fontWeight: 800 }}>Tecnología que llega</span>
+            <br />
+            <span
+              style={{
+                fontWeight: 300,
+                fontStyle: 'italic',
+                color: 'var(--text-body)',
+              }}
             >
-              <Icon
-                className="h-4 w-4 flex-shrink-0 text-ink"
-                aria-hidden="true"
-                strokeWidth={2.2}
-              />
-              <span className="text-xs font-semibold text-ink sm:text-sm">
-                {label}
-              </span>
-            </div>
-          ))}
-        </motion.div>
+              a tu puerta.
+            </span>
+          </motion.h1>
+
+          <motion.p
+            variants={fadeUp}
+            initial="hidden"
+            animate="show"
+            custom={2}
+            className="mx-auto mt-6 max-w-xl text-base font-medium leading-relaxed text-[color:var(--text-body)] sm:text-lg lg:mx-0"
+          >
+            Accesorios tecnológicos en {SITE.city} con domicilio gratis y pago
+            contra entrega. Paga solo cuando recibas tu pedido. Garantía de{' '}
+            {SITE.warrantyMonths} meses en todos nuestros productos.
+          </motion.p>
+
+          <motion.div
+            variants={fadeUp}
+            initial="hidden"
+            animate="show"
+            custom={3}
+            className="mt-9 flex flex-col items-center gap-3 sm:flex-row sm:justify-center lg:justify-start"
+          >
+            <a
+              href="#products"
+              className="btn-solid-black inline-flex w-full items-center justify-center gap-2 rounded-full px-8 py-4 text-sm font-bold uppercase tracking-wide sm:w-auto"
+            >
+              Ver productos
+              <ArrowDown className="h-4 w-4" aria-hidden="true" />
+            </a>
+            <a
+              href={WHATSAPP_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn-glass-light inline-flex w-full items-center justify-center gap-2 rounded-full px-8 py-4 text-sm font-bold uppercase tracking-wide sm:w-auto"
+            >
+              <WhatsAppGlyph />
+              Pedir por WhatsApp
+            </a>
+          </motion.div>
+
+          <motion.div
+            variants={fadeUp}
+            initial="hidden"
+            animate="show"
+            custom={4}
+            className="mt-10 flex flex-wrap items-center justify-center gap-x-5 gap-y-3 lg:justify-start"
+          >
+            {BADGES.map(({ icon: Icon, label }) => (
+              <div
+                key={label}
+                className="flex items-center gap-2 text-[color:var(--text-body)]"
+              >
+                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[color:var(--text-primary)]/5">
+                  <Icon
+                    className="h-3.5 w-3.5 text-[color:var(--text-primary)]"
+                    aria-hidden="true"
+                    strokeWidth={2.4}
+                  />
+                </span>
+                <span className="text-xs font-semibold sm:text-sm">
+                  {label}
+                </span>
+              </div>
+            ))}
+          </motion.div>
+        </div>
+
+        <div className="order-1 pb-12 sm:pb-16 lg:order-2 lg:col-span-6 lg:pb-0">
+          <HeroProduct product={featured} />
+        </div>
       </div>
     </section>
   )

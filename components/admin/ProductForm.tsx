@@ -54,7 +54,15 @@ function pickPrimaryImageUrl(media: ProductMedia[] | undefined, fallback?: strin
   return fallback ?? '/img.jpg'
 }
 
-const CATEGORIES: ProductCategory[] = ['Audio', 'Wearables', 'Cables', 'Cargadores']
+const CATEGORIES: ProductCategory[] = [
+  'Audio',
+  'Relojes Inteligentes',
+  'Cables',
+  'Cargadores',
+  'Gaming',
+  'Hogar Tech',
+  'Cuidado Personal',
+]
 
 interface ProductFormProps {
   product?: Product

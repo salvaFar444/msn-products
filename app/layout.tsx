@@ -9,7 +9,8 @@ const fraunces = Fraunces({
   variable: '--font-fraunces',
   subsets: ['latin'],
   display: 'swap',
-  weight: ['400', '500', '600', '700', '800'],
+  weight: ['300', '400', '500', '600', '700', '800', '900'],
+  style: ['normal', 'italic'],
 })
 
 const jakarta = Plus_Jakarta_Sans({

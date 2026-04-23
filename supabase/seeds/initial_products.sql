@@ -10,7 +10,7 @@ INSERT INTO products (name, short_name, category, price, description, image_url,
 VALUES
 ('Smartwatch Deportivo con Sensor Cardíaco',
  'Smartwatch Deportivo',
- 'Wearables',
+ 'Relojes Inteligentes',
  150000,
  'Smartwatch con monitoreo de salud avanzado y conectividad con tu smartphone.',
  '/img.jpg',

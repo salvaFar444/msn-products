@@ -1,6 +1,13 @@
 // ─── Product Types ────────────────────────────────────────────────
 
-export type ProductCategory = 'Audio' | 'Wearables' | 'Cables' | 'Cargadores'
+export type ProductCategory =
+  | 'Audio'
+  | 'Relojes Inteligentes'
+  | 'Cables'
+  | 'Cargadores'
+  | 'Gaming'
+  | 'Hogar Tech'
+  | 'Cuidado Personal'
 
 export type MediaType = 'image' | 'video'
 

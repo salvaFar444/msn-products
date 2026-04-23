@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { Instagram, MapPin, ShieldCheck, Truck, Wallet } from 'lucide-react'
 import { SITE, WHATSAPP_URL } from '@/data/site'
 
@@ -14,9 +15,15 @@ const WhatsAppGlyph = () => (
 
 export default function Footer() {
   const year = new Date().getFullYear()
-
-  const categories = ['Audio', 'Cables', 'Wearables', 'Cargadores']
-
+  const categories = [
+    'Audio',
+    'Relojes Inteligentes',
+    'Cables',
+    'Cargadores',
+    'Gaming',
+    'Hogar Tech',
+    'Cuidado Personal',
+  ]
   const info = [
     { icon: <Truck className="h-4 w-4" />, label: `Domicilio gratis en ${SITE.city}` },
     {
@@ -30,77 +37,34 @@ export default function Footer() {
   ]
 
   return (
-    <footer className="bg-surface border-t border-border">
-      <div className="mx-auto max-w-7xl px-4 pt-16 pb-10 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 gap-10 md:grid-cols-4">
-          {/* Brand */}
-          <div className="md:col-span-1">
-            <p className="font-display text-2xl font-extrabold tracking-tight text-ink-strong">
-              MSN
-              <span className="ml-1.5 text-xs font-bold tracking-[0.2em] uppercase text-ink-light">
+    <footer className="bg-[color:var(--bg-inverted)] text-white">
+      <div className="mx-auto max-w-7xl px-4 pt-20 pb-10 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 gap-12 md:grid-cols-12">
+          <div className="md:col-span-5">
+            <Link href="/" className="inline-flex items-baseline gap-1.5">
+              <span className="font-display text-3xl font-extrabold tracking-tight text-white">
+                MSN
+              </span>
+              <span className="text-[10px] font-bold uppercase tracking-[0.22em] text-white/55">
                 Products
               </span>
-            </p>
-            <p className="mt-3 text-sm leading-relaxed text-ink-light max-w-xs">
+            </Link>
+            <p className="mt-4 max-w-md text-sm leading-relaxed text-white/65">
               Accesorios tecnológicos en {SITE.city}, {SITE.department}.
               Domicilio gratis y pago contra entrega.
             </p>
-            <div className="mt-5 flex items-center gap-2 text-sm text-ink-light">
-              <MapPin className="h-4 w-4 text-ink" aria-hidden="true" />
+            <div className="mt-6 flex items-center gap-2 text-sm text-white/70">
+              <MapPin className="h-4 w-4 text-white" aria-hidden="true" />
               <span>
                 {SITE.city}, {SITE.department} — {SITE.country}
               </span>
             </div>
-          </div>
-
-          {/* Tienda */}
-          <div>
-            <h3 className="mb-4 text-xs font-extrabold uppercase tracking-[0.15em] text-ink-strong">
-              Tienda
-            </h3>
-            <ul className="space-y-2.5">
-              {categories.map((cat) => (
-                <li key={cat}>
-                  <a
-                    href="#products"
-                    className="text-sm text-ink-light hover:text-ink-strong transition-colors"
-                  >
-                    {cat}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Información */}
-          <div>
-            <h3 className="mb-4 text-xs font-extrabold uppercase tracking-[0.15em] text-ink-strong">
-              Información
-            </h3>
-            <ul className="space-y-2.5">
-              {info.map(({ icon, label }) => (
-                <li
-                  key={label}
-                  className="flex items-center gap-2 text-sm text-ink-light"
-                >
-                  <span className="text-ink">{icon}</span>
-                  {label}
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Contacto */}
-          <div>
-            <h3 className="mb-4 text-xs font-extrabold uppercase tracking-[0.15em] text-ink-strong">
-              Contáctanos
-            </h3>
-            <div className="space-y-3">
+            <div className="mt-7 flex flex-wrap gap-3">
               <a
                 href={WHATSAPP_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 rounded-full bg-whatsapp hover:bg-whatsapp-hover px-4 py-2.5 text-sm font-bold text-white transition-colors"
+                className="inline-flex items-center gap-2 rounded-full bg-whatsapp hover:bg-whatsapp-hover px-5 py-3 text-sm font-bold text-white transition-colors"
               >
                 <WhatsAppGlyph />
                 {SITE.whatsappDisplay}
@@ -109,22 +73,56 @@ export default function Footer() {
                 href={SITE.instagramUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-2 text-sm font-semibold text-ink-light hover:text-ink-strong transition-colors"
+                className="inline-flex items-center gap-2 rounded-full border border-white/20 px-5 py-3 text-sm font-semibold text-white/85 transition-colors hover:border-white hover:text-white"
               >
                 <Instagram className="h-4 w-4" aria-hidden="true" />@
                 {SITE.instagram}
               </a>
             </div>
           </div>
+
+          <div className="md:col-span-3">
+            <h3 className="mb-5 text-xs font-extrabold uppercase tracking-[0.18em] text-white">
+              Tienda
+            </h3>
+            <ul className="space-y-3">
+              {categories.map((cat) => (
+                <li key={cat}>
+                  <a
+                    href="#products"
+                    className="text-sm text-white/70 transition-colors hover:text-white"
+                  >
+                    {cat}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="md:col-span-4">
+            <h3 className="mb-5 text-xs font-extrabold uppercase tracking-[0.18em] text-white">
+              Información
+            </h3>
+            <ul className="space-y-3">
+              {info.map(({ icon, label }) => (
+                <li
+                  key={label}
+                  className="flex items-center gap-2.5 text-sm text-white/70"
+                >
+                  <span className="text-white">{icon}</span>
+                  {label}
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
 
-        {/* Bottom bar */}
-        <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-border pt-6 sm:flex-row">
-          <p className="text-xs font-medium text-ink-muted">
+        <div className="mt-14 flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-7 sm:flex-row">
+          <p className="text-xs font-medium text-white/50">
             &copy; {year} {SITE.name}. Todos los derechos reservados.
           </p>
-          <div className="flex items-center gap-1.5 text-xs font-semibold text-ink-light">
-            <Truck className="h-3.5 w-3.5 text-ink" aria-hidden="true" />
+          <div className="flex items-center gap-1.5 text-xs font-semibold text-white/65">
+            <Truck className="h-3.5 w-3.5 text-white" aria-hidden="true" />
             <span>Domicilio gratis en {SITE.city}</span>
           </div>
         </div>

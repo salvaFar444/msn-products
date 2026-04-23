@@ -12,17 +12,15 @@ interface ProductCardProps {
   product: Product
 }
 
-// Maps common Spanish badge strings to a visual variant. New palette: only
-// black, white, and semantic status colors (success/danger) — no accent.
 function getBadgeStyle(badge: string): string {
   const b = badge.toLowerCase()
   if (b.includes('nuevo'))
     return 'bg-success/10 text-success border-success/30'
   if (b.includes('vendido'))
-    return 'bg-primary text-white border-primary'
+    return 'bg-[color:var(--text-primary)] text-white border-[color:var(--text-primary)]'
   if (b.includes('últim') || b.includes('ultim'))
     return 'bg-danger/10 text-danger border-danger/30'
-  return 'bg-primary text-white border-primary'
+  return 'bg-[color:var(--text-primary)] text-white border-[color:var(--text-primary)]'
 }
 
 export default function ProductCard({ product }: ProductCardProps) {
@@ -31,9 +29,6 @@ export default function ProductCard({ product }: ProductCardProps) {
 
   const inStock = product.stock > 0
 
-  // The CTA button is nested inside a <Link> wrapping the whole card. When
-  // the user clicks "Agregar al carrito" we must stop the navigation so they
-  // stay on the home grid with the cart-drawer behavior intact.
   const handleAdd = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault()
     e.stopPropagation()
@@ -49,20 +44,27 @@ export default function ProductCard({ product }: ProductCardProps) {
     <Link
       href={href}
       aria-label={`Ver ${product.name}`}
-      className="group block h-full focus:outline-none focus-visible:ring-2 focus-visible:ring-ink focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-2xl"
+      className="group block h-full rounded-3xl focus:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--text-primary)] focus-visible:ring-offset-2"
     >
-      <article className="card card-hover flex h-full flex-col overflow-hidden">
-        {/* Image */}
-        <div className="relative aspect-square overflow-hidden bg-surface">
+      <article
+        className="flex h-full flex-col overflow-hidden rounded-3xl bg-[color:var(--bg-surface-elevated)] transition-all duration-[var(--duration-base)] ease-[var(--ease-out)] group-hover:-translate-y-1.5"
+        style={{
+          border: '1px solid var(--border-subtle)',
+          boxShadow: 'var(--shadow-card)',
+        }}
+      >
+        <div
+          className="relative aspect-square overflow-hidden"
+          style={{ backgroundColor: 'var(--bg-surface)' }}
+        >
           <Image
             src={product.image}
             alt={product.name}
             fill
-            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-            className="object-contain p-6 transition-transform duration-500 ease-out group-hover:scale-[1.05]"
+            sizes="(max-width: 640px) 75vw, (max-width: 1024px) 50vw, 25vw"
+            className="object-contain p-7 transition-transform duration-700 ease-[var(--ease-out)] group-hover:scale-[1.06]"
           />
 
-          {/* Badges */}
           <div className="absolute left-3 top-3 flex flex-col gap-1.5">
             {product.badge && (
               <span
@@ -83,7 +85,6 @@ export default function ProductCard({ product }: ProductCardProps) {
             )}
           </div>
 
-          {/* Video indicator (top-right) */}
           {product.hasVideo && (
             <span
               className="absolute right-3 top-3 flex items-center gap-1 rounded-full bg-black/70 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-white backdrop-blur-sm"
@@ -94,7 +95,6 @@ export default function ProductCard({ product }: ProductCardProps) {
             </span>
           )}
 
-          {/* Free delivery overlay on hover */}
           <div className="absolute bottom-0 left-0 right-0 translate-y-full transition-transform duration-300 ease-out group-hover:translate-y-0">
             <div
               className="flex items-center justify-center gap-1.5 py-2.5 text-[11px] font-bold uppercase tracking-wide text-white shadow-lg"
@@ -106,33 +106,28 @@ export default function ProductCard({ product }: ProductCardProps) {
           </div>
         </div>
 
-        {/* Content */}
         <div className="flex flex-1 flex-col p-5">
-          {/* Category label */}
-          <p className="mb-1.5 text-[10px] font-extrabold uppercase tracking-[0.18em] text-ink-light">
+          <p className="mb-1.5 text-[10px] font-extrabold uppercase tracking-[0.2em] text-[color:var(--text-muted)]">
             {product.category}
           </p>
 
-          {/* Name */}
-          <h3 className="mb-2 text-base font-extrabold leading-snug text-ink-strong">
+          <h3 className="font-display mb-2 text-lg font-extrabold leading-snug text-[color:var(--text-strong)]">
             {product.name}
           </h3>
 
-          {/* Description */}
-          <p className="mb-3 flex-1 line-clamp-2 text-sm leading-relaxed text-ink-light">
+          <p className="mb-4 flex-1 line-clamp-2 text-sm leading-relaxed text-[color:var(--text-body)]">
             {product.description}
           </p>
 
-          {/* Features */}
           {product.features.length > 0 && (
             <ul className="mb-4 space-y-1">
               {product.features.slice(0, 2).map((feature) => (
                 <li
                   key={feature}
-                  className="flex items-center gap-2 text-xs text-ink-light"
+                  className="flex items-center gap-2 text-xs text-[color:var(--text-body)]"
                 >
                   <Check
-                    className="h-3.5 w-3.5 flex-shrink-0 text-ink"
+                    className="h-3.5 w-3.5 flex-shrink-0 text-[color:var(--text-primary)]"
                     aria-hidden="true"
                     strokeWidth={3}
                   />
@@ -142,14 +137,16 @@ export default function ProductCard({ product }: ProductCardProps) {
             </ul>
           )}
 
-          {/* Price + CTA */}
-          <div className="mt-auto border-t border-border pt-4">
-            <div className="mb-3 flex items-baseline gap-2">
-              <p className="text-2xl font-extrabold text-ink-strong">
+          <div
+            className="mt-auto flex items-end justify-between gap-3 pt-4"
+            style={{ borderTop: '1px solid var(--border-subtle)' }}
+          >
+            <div>
+              <p className="font-display text-2xl font-extrabold leading-none text-[color:var(--text-strong)]">
                 {formatCOP(product.price)}
               </p>
               {inStock && product.stock > 0 && product.stock <= 5 && (
-                <span className="text-xs font-bold text-danger">
+                <span className="mt-1 block text-[10px] font-bold uppercase tracking-wider text-danger">
                   ¡Últimas unidades!
                 </span>
               )}
@@ -163,12 +160,12 @@ export default function ProductCard({ product }: ProductCardProps) {
                   ? `${product.name} — Agotado`
                   : `Agregar ${product.name} al carrito`
               }
-              className={`flex h-12 w-full items-center justify-center gap-2 rounded-full text-sm font-bold tracking-wide uppercase transition-all duration-200 active:scale-[0.97] ${
+              className={`flex h-11 flex-shrink-0 items-center justify-center gap-1.5 rounded-full px-4 text-xs font-bold uppercase tracking-wide transition-all duration-200 active:scale-[0.96] ${
                 !inStock
-                  ? 'cursor-not-allowed bg-surface text-ink-muted'
+                  ? 'cursor-not-allowed bg-[color:var(--bg-surface)] text-[color:var(--text-faint)]'
                   : added
-                    ? 'bg-success/10 text-success border border-success/40'
-                    : 'bg-primary text-white hover:opacity-90'
+                    ? 'border border-success/40 bg-success/10 text-success'
+                    : 'bg-[color:var(--text-primary)] text-white hover:bg-black hover:shadow-lg'
               }`}
             >
               {!inStock ? (
@@ -176,12 +173,12 @@ export default function ProductCard({ product }: ProductCardProps) {
               ) : added ? (
                 <>
                   <Check className="h-4 w-4" aria-hidden="true" strokeWidth={3} />
-                  ¡Agregado!
+                  Agregado
                 </>
               ) : (
                 <>
                   <ShoppingCart className="h-4 w-4" aria-hidden="true" />
-                  Agregar al carrito
+                  Añadir
                 </>
               )}
             </button>

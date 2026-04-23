@@ -31,6 +31,36 @@ async function fetchMediaFor(productIds: string[]): Promise<Map<string, ProductM
   return byProduct
 }
 
+export async function getFeaturedProduct(): Promise<Product | null> {
+  const { data, error } = await supabase
+    .from('products')
+    .select('*')
+    .ilike('badge', '%vendido%')
+    .gt('stock', 0)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  if (!error && data) {
+    const row = data as ProductRow
+    const mediaByProduct = await fetchMediaFor([row.id])
+    return rowToProduct(row, mediaByProduct.get(row.id))
+  }
+
+  const fallback = await supabase
+    .from('products')
+    .select('*')
+    .gt('stock', 0)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  if (fallback.error || !fallback.data) return null
+  const row = fallback.data as ProductRow
+  const mediaByProduct = await fetchMediaFor([row.id])
+  return rowToProduct(row, mediaByProduct.get(row.id))
+}
+
 export async function getAllProducts(): Promise<Product[]> {
   const { data, error } = await supabase
     .from('products')

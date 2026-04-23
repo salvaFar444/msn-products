@@ -23,9 +23,20 @@ export const productFormSchema = z.object({
     .trim()
     .min(2, 'El nombre corto debe tener al menos 2 caracteres.')
     .max(60, 'Nombre corto demasiado largo (máx. 60).'),
-  category: z.enum(['Audio', 'Wearables', 'Cables', 'Cargadores'], {
-    errorMap: () => ({ message: 'Categoría inválida.' }),
-  }),
+  category: z.enum(
+    [
+      'Audio',
+      'Relojes Inteligentes',
+      'Cables',
+      'Cargadores',
+      'Gaming',
+      'Hogar Tech',
+      'Cuidado Personal',
+    ],
+    {
+      errorMap: () => ({ message: 'Categoría inválida.' }),
+    }
+  ),
   price: z.coerce
     .number({ invalid_type_error: 'El precio debe ser un número.' })
     .int('El precio debe ser un entero (COP sin decimales).')

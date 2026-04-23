@@ -1,0 +1,17 @@
+-- =====================================================
+-- ⚠️  ARCHIVO DEPRECADO — NO EJECUTAR
+-- =====================================================
+-- Este archivo contenía INSERTs sin ON CONFLICT y generaba
+-- productos duplicados cuando se re-ejecutaba.
+--
+-- Fue reemplazado por:
+--   supabase/migrations/001_schema.sql    (estructura)
+--   supabase/migrations/002_product_media.sql
+--   supabase/migrations/003_products_slug.sql
+--   supabase/migrations/004_extended_fields.sql
+--   supabase/migrations/005_reviews.sql
+--   supabase/seeds/initial_products.sql   (datos — con ON CONFLICT)
+--   supabase/seeds/initial_reviews.sql
+--
+-- Lee supabase/README.md para el orden de ejecución.
+-- =====================================================

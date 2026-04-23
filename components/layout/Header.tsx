@@ -23,8 +23,9 @@ export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false)
 
   useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 40)
+    const handleScroll = () => setScrolled(window.scrollY > 20)
     window.addEventListener('scroll', handleScroll, { passive: true })
+    handleScroll()
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
@@ -38,10 +39,8 @@ export default function Header() {
 
   return (
     <header
-      className={`fixed top-9 left-0 right-0 z-40 transition-all duration-300 ${
-        scrolled
-          ? 'bg-white/95 backdrop-blur-md border-b border-border shadow-sm'
-          : 'bg-white border-b border-border/60'
+      className={`fixed top-9 left-0 right-0 z-40 header-glass ${
+        scrolled ? 'header-glass-scrolled' : ''
       }`}
     >
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
