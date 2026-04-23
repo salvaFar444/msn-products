@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { ArrowDown, MapPin, ShieldCheck, Wallet } from 'lucide-react'
 import { SITE, WHATSAPP_URL } from '@/data/site'
@@ -69,7 +70,7 @@ export default function Hero({ featured }: HeroProps) {
         }}
       />
 
-      <div className="relative mx-auto grid max-w-7xl grid-cols-1 items-center gap-8 px-5 pt-10 pb-14 sm:px-8 sm:pt-16 sm:pb-20 lg:grid-cols-12 lg:gap-16 lg:pt-24">
+      <div className="relative mx-auto grid max-w-7xl grid-cols-1 items-center gap-4 px-5 pt-6 pb-10 sm:gap-8 sm:px-8 sm:pt-14 sm:pb-16 lg:grid-cols-12 lg:gap-16 lg:pt-24 lg:pb-20">
         <div className="order-2 text-center lg:order-1 lg:col-span-6 lg:text-left">
           {featured?.badge && (
             <motion.div
@@ -95,9 +96,18 @@ export default function Hero({ featured }: HeroProps) {
             animate="show"
             custom={1}
             className="mt-5 font-display font-extrabold leading-[1.02] tracking-[-0.02em] text-[color:var(--text-strong)]"
-            style={{ fontSize: 'clamp(2.2rem, 5.6vw, 4.2rem)' }}
+            style={{ fontSize: 'clamp(1.9rem, 5vw, 4rem)' }}
           >
-            {headline}
+            {featured ? (
+              <Link
+                href={`/producto/${featured.slug}`}
+                className="inline-block transition-opacity hover:opacity-80 active:opacity-70"
+              >
+                {headline}
+              </Link>
+            ) : (
+              headline
+            )}
           </motion.h1>
 
           {featured && (

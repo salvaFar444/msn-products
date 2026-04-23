@@ -1,6 +1,7 @@
 'use client'
 
 import Image from 'next/image'
+import Link from 'next/link'
 import { motion } from 'framer-motion'
 import type { Product } from '@/types'
 
@@ -18,7 +19,10 @@ export default function HeroProduct({ product }: Props) {
   }
 
   return (
-    <div className="hero-product-scene">
+    <Link
+      href={`/producto/${product.slug}`}
+      aria-label={`Ver detalle de ${product.name}`}
+      className="hero-product-scene block cursor-pointer transition-transform duration-200 ease-out active:scale-[0.98]">
       <motion.div
         className="hero-halo"
         aria-hidden="true"
@@ -72,6 +76,6 @@ export default function HeroProduct({ product }: Props) {
           repeat: Infinity,
         }}
       />
-    </div>
+    </Link>
   )
 }
