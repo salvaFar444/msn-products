@@ -27,7 +27,15 @@ export default function ProductGrid({ products }: ProductGridProps) {
       aria-labelledby="products-heading"
       className="relative bg-[color:var(--bg-base)]"
     >
-      <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8 lg:py-28">
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-x-0 top-0 h-24 sm:h-32"
+        style={{
+          background:
+            'linear-gradient(to bottom, rgba(10,10,10,0.14) 0%, rgba(10,10,10,0.06) 40%, rgba(10,10,10,0) 100%)',
+        }}
+      />
+      <div className="relative mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8 lg:py-28">
         <div className="mb-10 flex flex-col items-start gap-6 md:mb-14">
           <div>
             <p className="text-xs font-extrabold uppercase tracking-[0.22em] text-[color:var(--text-body)]">
