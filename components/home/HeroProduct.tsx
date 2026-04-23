@@ -22,6 +22,7 @@ export default function HeroProduct({ product }: Props) {
 
   return (
     <div className="hero-product-scene">
+      {/* Halo de luz de fondo */}
       <motion.div
         className="hero-halo"
         aria-hidden="true"
@@ -29,13 +30,13 @@ export default function HeroProduct({ product }: Props) {
           shouldReduce
             ? undefined
             : {
-                opacity: [0.35, 0.6, 0.35],
-                scale: [1, 1.08, 1],
-              }
+              opacity: [0.35, 0.6, 0.35],
+              scale: [1, 1.08, 1],
+            }
         }
         transition={{
           duration: 4,
-          ease: 'easeInOut',
+          timeout: 'easeInOut',
           repeat: Infinity,
         }}
       />
@@ -46,9 +47,9 @@ export default function HeroProduct({ product }: Props) {
           shouldReduce
             ? undefined
             : {
-                y: [0, -20, 0],
-                rotate: [0, 1.5, 0, -1.5, 0],
-              }
+              y: [0, -20, 0],
+              rotate: [0, 1.5, 0, -1.5, 0],
+            }
         }
         transition={{
           duration: 4,
@@ -56,30 +57,51 @@ export default function HeroProduct({ product }: Props) {
           repeat: Infinity,
         }}
       >
-        <div className="hero-product-light-overlay" aria-hidden="true" />
-        <div className="hero-product-img-wrapper">
+        {/* Eliminamos cualquier color de fondo aquí para evitar el recuadro */}
+        <div className="hero-product-light-overlay" aria-hidden="true" style={{ background: 'none' }} />
+
+        <div className="hero-product-img-wrapper" style={{ filter: 'none', boxShadow: 'none' }}>
           <Image
             src={product.image}
             alt={product.name}
             fill
             priority
             sizes="(max-width: 768px) 220px, (max-width: 1024px) 300px, 380px"
+            // La clave: drop-shadow sigue la forma del PNG. 
+            // El primer valor es horizontal, el segundo vertical, el tercero el desenfoque y el último el color.
+            style={{
+              objectFit: 'contain',
+              filter: 'drop-shadow(0 25px 35px rgba(0, 0, 0, 0.15))'
+            }}
             className="hero-product-img"
             draggable={false}
           />
         </div>
       </motion.div>
 
+      {/* Sombra de suelo (ajustada para ser circular/difuminada) */}
       <motion.div
         className="hero-product-shadow"
         aria-hidden="true"
+        style={{
+          background: 'radial-gradient(ellipse at center, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0) 70%)',
+          borderRadius: '50%',
+          width: '200px',
+          height: '40px',
+          margin: '0 auto',
+          filter: 'blur(10px)',
+          position: 'absolute',
+          bottom: '20%',
+          left: '50%',
+          transform: 'translateX(-50%)'
+        }}
         animate={
           shouldReduce
             ? undefined
             : {
-                scaleX: [1, 0.8, 1],
-                opacity: [0.18, 0.08, 0.18],
-              }
+              scaleX: [1, 0.8, 1],
+              opacity: [0.18, 0.08, 0.18],
+            }
         }
         transition={{
           duration: 4,
