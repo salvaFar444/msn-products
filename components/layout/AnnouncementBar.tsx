@@ -23,17 +23,20 @@ export default function AnnouncementBar() {
       aria-label="Anuncio de la tienda"
       className="fixed left-0 right-0 top-0 z-50 h-9 overflow-hidden bg-primary flex items-center"
     >
-      <div className="flex whitespace-nowrap animate-marquee">
-        <span className="px-6">
+      <div
+        className="flex whitespace-nowrap animate-marquee"
+        style={{ willChange: 'transform' }}
+      >
+        <div className="flex shrink-0 px-6">
           {Array.from({ length: count }).map((_, i) => (
             <Segment key={`a-${i}`} />
           ))}
-        </span>
-        <span className="px-6" aria-hidden="true">
+        </div>
+        <div className="flex shrink-0 px-6" aria-hidden="true">
           {Array.from({ length: count }).map((_, i) => (
             <Segment key={`b-${i}`} />
           ))}
-        </span>
+        </div>
       </div>
     </div>
   )

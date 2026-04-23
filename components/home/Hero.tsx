@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion'
 import { ArrowDown, MapPin, ShieldCheck, Wallet } from 'lucide-react'
 import { SITE, WHATSAPP_URL } from '@/data/site'
+import { formatCOP } from '@/lib/formatCurrency'
 import HeroProduct from './HeroProduct'
 import type { Product } from '@/types'
 
@@ -20,10 +21,7 @@ const WhatsAppGlyph = () => (
 const BADGES = [
   { icon: MapPin, label: `Domicilio gratis en ${SITE.city}` },
   { icon: Wallet, label: 'Pago contra entrega' },
-  {
-    icon: ShieldCheck,
-    label: `Garantía ${SITE.warrantyMonths} meses`,
-  },
+  { icon: ShieldCheck, label: `Garantía ${SITE.warrantyMonths} meses` },
 ]
 
 const fadeUp = {
@@ -43,7 +41,15 @@ interface HeroProps {
   featured: Product | null
 }
 
+function handleScrollToProducts(e: React.MouseEvent<HTMLAnchorElement>) {
+  e.preventDefault()
+  const el = document.getElementById('products')
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+}
+
 export default function Hero({ featured }: HeroProps) {
+  const headline = featured?.name ?? 'Tecnología al mejor precio.'
+
   return (
     <section className="relative overflow-hidden hero-atmosphere">
       <div
@@ -63,66 +69,59 @@ export default function Hero({ featured }: HeroProps) {
         }}
       />
 
-      <div className="relative mx-auto grid max-w-7xl grid-cols-1 items-center gap-12 px-5 pt-16 pb-20 sm:px-8 sm:pt-20 sm:pb-28 lg:grid-cols-12 lg:gap-16 lg:pt-24">
+      <div className="relative mx-auto grid max-w-7xl grid-cols-1 items-center gap-8 px-5 pt-10 pb-14 sm:px-8 sm:pt-16 sm:pb-20 lg:grid-cols-12 lg:gap-16 lg:pt-24">
         <div className="order-2 text-center lg:order-1 lg:col-span-6 lg:text-left">
-          <motion.div
-            variants={fadeUp}
-            initial="hidden"
-            animate="show"
-            custom={0}
-            className="chip-glass inline-flex items-center gap-2 rounded-full px-4 py-1.5"
-          >
-            <span className="relative flex h-2 w-2">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[color:var(--text-primary)] opacity-50" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-[color:var(--text-primary)]" />
-            </span>
-            <span className="text-[11px] font-bold uppercase tracking-[0.16em] text-[color:var(--text-primary)]">
-              {SITE.city}, {SITE.department}
-            </span>
-          </motion.div>
+          {featured?.badge && (
+            <motion.div
+              variants={fadeUp}
+              initial="hidden"
+              animate="show"
+              custom={0}
+              className="chip-glass inline-flex items-center gap-2 rounded-full px-4 py-1.5"
+            >
+              <span className="relative flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[color:var(--text-primary)] opacity-50" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-[color:var(--text-primary)]" />
+              </span>
+              <span className="text-[11px] font-bold uppercase tracking-[0.16em] text-[color:var(--text-primary)]">
+                {featured.badge}
+              </span>
+            </motion.div>
+          )}
 
           <motion.h1
             variants={fadeUp}
             initial="hidden"
             animate="show"
             custom={1}
-            className="mt-7 font-display leading-[0.98] tracking-[-0.02em] text-[color:var(--text-strong)]"
-            style={{ fontSize: 'clamp(2.8rem, 7.4vw, 5.6rem)' }}
+            className="mt-5 font-display font-extrabold leading-[1.02] tracking-[-0.02em] text-[color:var(--text-strong)]"
+            style={{ fontSize: 'clamp(2.2rem, 5.6vw, 4.2rem)' }}
           >
-            <span style={{ fontWeight: 800 }}>Tecnología que llega</span>
-            <br />
-            <span
-              style={{
-                fontWeight: 300,
-                fontStyle: 'italic',
-                color: 'var(--text-body)',
-              }}
-            >
-              a tu puerta.
-            </span>
+            {headline}
           </motion.h1>
 
-          <motion.p
-            variants={fadeUp}
-            initial="hidden"
-            animate="show"
-            custom={2}
-            className="mx-auto mt-6 max-w-xl text-base font-medium leading-relaxed text-[color:var(--text-body)] sm:text-lg lg:mx-0"
-          >
-            Accesorios tecnológicos en {SITE.city} con domicilio gratis y pago
-            contra entrega. Paga solo cuando recibas tu pedido. Garantía de{' '}
-            {SITE.warrantyMonths} meses en todos nuestros productos.
-          </motion.p>
+          {featured && (
+            <motion.p
+              variants={fadeUp}
+              initial="hidden"
+              animate="show"
+              custom={2}
+              className="mt-4 font-display text-2xl font-extrabold text-[color:var(--text-strong)] sm:text-3xl"
+            >
+              {formatCOP(featured.price)}
+            </motion.p>
+          )}
 
           <motion.div
             variants={fadeUp}
             initial="hidden"
             animate="show"
             custom={3}
-            className="mt-9 flex flex-col items-center gap-3 sm:flex-row sm:justify-center lg:justify-start"
+            className="mt-7 flex flex-col items-center gap-3 sm:flex-row sm:justify-center lg:justify-start"
           >
             <a
               href="#products"
+              onClick={handleScrollToProducts}
               className="btn-solid-black inline-flex w-full items-center justify-center gap-2 rounded-full px-8 py-4 text-sm font-bold uppercase tracking-wide sm:w-auto"
             >
               Ver productos
@@ -144,7 +143,7 @@ export default function Hero({ featured }: HeroProps) {
             initial="hidden"
             animate="show"
             custom={4}
-            className="mt-10 flex flex-wrap items-center justify-center gap-x-5 gap-y-3 lg:justify-start"
+            className="mt-8 flex flex-wrap items-center justify-center gap-x-5 gap-y-3 lg:justify-start"
           >
             {BADGES.map(({ icon: Icon, label }) => (
               <div
@@ -158,15 +157,13 @@ export default function Hero({ featured }: HeroProps) {
                     strokeWidth={2.4}
                   />
                 </span>
-                <span className="text-xs font-semibold sm:text-sm">
-                  {label}
-                </span>
+                <span className="text-xs font-semibold sm:text-sm">{label}</span>
               </div>
             ))}
           </motion.div>
         </div>
 
-        <div className="order-1 pb-12 sm:pb-16 lg:order-2 lg:col-span-6 lg:pb-0">
+        <div className="order-1 pb-4 sm:pb-8 lg:order-2 lg:col-span-6 lg:pb-0">
           <HeroProduct product={featured} />
         </div>
       </div>

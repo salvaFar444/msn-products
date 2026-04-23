@@ -44,7 +44,7 @@ export default function ProductCard({ product }: ProductCardProps) {
     <Link
       href={href}
       aria-label={`Ver ${product.name}`}
-      className="group block h-full rounded-3xl focus:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--text-primary)] focus-visible:ring-offset-2"
+      className="group block h-full rounded-3xl transition-transform duration-150 ease-out active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--text-primary)] focus-visible:ring-offset-2"
     >
       <article
         className="flex h-full flex-col overflow-hidden rounded-3xl bg-[color:var(--bg-surface-elevated)] transition-all duration-[var(--duration-base)] ease-[var(--ease-out)] group-hover:-translate-y-1.5"

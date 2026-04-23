@@ -141,12 +141,14 @@ export default function ProductGallery({
               src={active.url}
               controls
               playsInline
-              className="h-full w-full object-contain"
+              preload="metadata"
+              controlsList="nodownload"
+              className="relative z-20 h-full w-full object-contain"
             />
           )}
 
-          {/* Arrow nav */}
-          {canNavigate && (
+          {/* Arrow nav — ocultas si estamos viendo un video para no tapar los controles */}
+          {canNavigate && active.mediaType === 'image' && (
             <>
               <NavArrow direction="left" onClick={() => goTo(activeIndex - 1)} />
               <NavArrow direction="right" onClick={() => goTo(activeIndex + 1)} />
@@ -176,19 +178,21 @@ export default function ProductGallery({
               src={active.url}
               controls
               playsInline
-              className="h-full w-full object-contain"
+              preload="metadata"
+              controlsList="nodownload"
+              className="relative z-20 h-full w-full object-contain"
             />
           )}
 
-          {canNavigate && (
+          {canNavigate && active.mediaType === 'image' && (
             <>
               <NavArrow direction="left" onClick={() => goTo(activeIndex - 1)} />
               <NavArrow direction="right" onClick={() => goTo(activeIndex + 1)} />
             </>
           )}
 
-          {/* Dot indicator */}
-          {canNavigate && (
+          {/* Dot indicator — oculto en video para no tapar controles */}
+          {canNavigate && active.mediaType === 'image' && (
             <div className="absolute bottom-3 left-1/2 z-10 flex -translate-x-1/2 gap-1.5 rounded-full bg-black/50 px-2.5 py-1 backdrop-blur-sm">
               {items.map((_, i) => (
                 <span
