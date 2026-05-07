@@ -1,33 +1,50 @@
 import type { Metadata } from 'next'
-import Hero from '@/components/home/Hero'
-import ProductGrid from '@/components/home/ProductGrid'
-import TrustSection from '@/components/home/TrustSection'
-import Testimonials from '@/components/home/Testimonials'
-import ContactSection from '@/components/home/ContactSection'
-import { getAllProducts, getFeaturedProduct } from '@/lib/products'
-import { SITE } from '@/data/site'
-import { SITE_NAME, SITE_DESCRIPTION, PRODUCTS_REVALIDATE_SECONDS } from '@/lib/constants'
+import LandingClient from '@/components/landing/LandingClient'
+import { fetchProduct, fetchRelatedProducts, PRODUCT_HANDLE } from '@/lib/shopify'
+import { SITE_NAME } from '@/lib/constants'
 
-export const revalidate = PRODUCTS_REVALIDATE_SECONDS
+// Revalidación cada 60s — el contenido del producto en Shopify
+// (precio, stock) cambia con frecuencia.
+export const revalidate = 60
 
-export const metadata: Metadata = {
-  title: `${SITE_NAME} — Accesorios tecnológicos con domicilio gratis en ${SITE.city}`,
-  description: SITE_DESCRIPTION,
+export async function generateMetadata(): Promise<Metadata> {
+  const product = await fetchProduct(PRODUCT_HANDLE)
+  const title = `${product.title} — Bluetooth para Moto | ${SITE_NAME}`
+  const description =
+    'Kit de 2 intercomunicadores Bluetooth 5.3 para moto. IP67, 42 h de batería, cancelación de ruido. Envío gratis en Montería. ¡Solo $129.900!'
+
+  const ogImage = product.images[0]?.url
+
+  return {
+    // 'absolute' evita que se le pegue el template "%s | MSN Products"
+    // definido en layout.tsx (sino quedaría duplicado el sufijo).
+    title: { absolute: title },
+    description,
+    openGraph: {
+      title,
+      description,
+      type: 'website',
+      images: ogImage ? [{ url: ogImage, width: 1200, height: 1200, alt: product.title }] : undefined,
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: ogImage ? [ogImage] : undefined,
+    },
+  }
 }
 
+/**
+ * Landing one-product. Hace fetch en el server del producto principal
+ * y de los relacionados desde Shopify Storefront API. El cliente
+ * (LandingClient) maneja la cantidad y los CTAs de carrito.
+ */
 export default async function HomePage() {
-  const [products, featured] = await Promise.all([
-    getAllProducts(),
-    getFeaturedProduct(),
+  const [product, related] = await Promise.all([
+    fetchProduct(PRODUCT_HANDLE),
+    fetchRelatedProducts(8),
   ])
 
-  return (
-    <>
-      <Hero featured={featured} />
-      <ProductGrid products={products} />
-      <TrustSection />
-      <Testimonials />
-      <ContactSection />
-    </>
-  )
+  return <LandingClient product={product} related={related} />
 }
