@@ -4,12 +4,13 @@ import { useEffect, useState } from 'react'
 import Image from 'next/image'
 import { Zap, Loader2 } from 'lucide-react'
 import { formatCOP } from '@/lib/formatCurrency'
-import { buyNow, type ShopifyProduct, type ShopifyVariant } from '@/lib/shopify'
+import { buildCartPermalink, type ShopifyProduct, type ShopifyVariant } from '@/lib/shopify'
 
 interface StickyAddToCartProps {
   product: ShopifyProduct
   variant: ShopifyVariant | null
   quantity: number
+  shopDomain: string
   /**
    * id del elemento que, al salir del viewport, dispara la aparición
    * de la barra. Por defecto: 'hero-cta'.
@@ -25,6 +26,7 @@ export default function StickyAddToCart({
   product,
   variant,
   quantity,
+  shopDomain,
   triggerId = 'hero-cta',
 }: StickyAddToCartProps) {
   const [visible, setVisible] = useState(false)
@@ -45,11 +47,11 @@ export default function StickyAddToCart({
     return () => observer.disconnect()
   }, [triggerId])
 
-  async function handleBuy() {
+  function handleBuy() {
     if (!variant) return
     setBusy(true)
     try {
-      const url = await buyNow(variant.id, quantity)
+      const url = buildCartPermalink(variant.id, quantity, shopDomain)
       window.location.href = url
     } catch (e) {
       console.error(e)

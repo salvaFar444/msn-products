@@ -18,6 +18,8 @@ import type { ShopifyProduct } from '@/lib/shopify'
 interface LandingClientProps {
   product: ShopifyProduct
   related: ShopifyProduct[]
+  /** Dominio de Shopify, ej. d9syc9-s9.myshopify.com */
+  shopDomain: string
 }
 
 /**
@@ -25,7 +27,7 @@ interface LandingClientProps {
  * todas las secciones. Recibe el producto principal y los relacionados
  * desde el server component (page.tsx).
  */
-export default function LandingClient({ product, related }: LandingClientProps) {
+export default function LandingClient({ product, related, shopDomain }: LandingClientProps) {
   const [quantity, setQuantity] = useState(1)
   const variant = product.defaultVariant
 
@@ -99,7 +101,12 @@ export default function LandingClient({ product, related }: LandingClientProps) 
 
             {/* CTAs principales */}
             <div id="hero-cta" className="mt-6">
-              <BuyButtons variant={variant} quantity={quantity} trackingId="hero" />
+              <BuyButtons
+                variant={variant}
+                quantity={quantity}
+                shopDomain={shopDomain}
+                trackingId="hero"
+              />
             </div>
 
             {/* Trust badges en línea horizontal */}
@@ -161,6 +168,7 @@ export default function LandingClient({ product, related }: LandingClientProps) 
             <BuyButtons
               variant={variant}
               quantity={quantity}
+              shopDomain={shopDomain}
               trackingId="repeat"
             />
           </div>
@@ -186,6 +194,7 @@ export default function LandingClient({ product, related }: LandingClientProps) 
         product={product}
         variant={variant}
         quantity={quantity}
+        shopDomain={shopDomain}
         triggerId="hero-cta"
       />
 

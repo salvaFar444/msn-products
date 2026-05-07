@@ -1,77 +1,19 @@
+import 'server-only'
+import type { ShopifyImage, ShopifyMoney, ShopifyProduct, ShopifyVariant } from './shopify'
+import { PRODUCT_HANDLE, RELATED_COLLECTION_HANDLE } from './shopify'
+
 /**
- * Shopify client.
+ * Fetcher server-only contra el Admin GraphQL API de Shopify.
  *
- * Estrategia:
- *   • Lecturas de producto/colección → Admin API GraphQL (server-side).
- *     El token (SHOPIFY_ADMIN_TOKEN) nunca viaja al browser.
- *   • Compra ("buy now") → cart permalink de Shopify
- *     (https://{shop}/cart/{variantId}:{qty}). No necesita token, el
- *     browser solo ve la URL y redirige al checkout nativo de Shopify.
- *
- * Variables de entorno (.env.local):
- *   - NEXT_PUBLIC_SHOPIFY_DOMAIN              tu-tienda.myshopify.com  (PÚBLICO)
- *   - SHOPIFY_ADMIN_TOKEN                     shpat_...                (PRIVADO server)
- *   - NEXT_PUBLIC_SHOPIFY_PRODUCT_HANDLE      handle del producto principal
- *   - NEXT_PUBLIC_SHOPIFY_RELATED_COLLECTION_HANDLE  handle colección secundarios
+ * Importa `server-only` para que el bundler de Next.js falle el build
+ * si alguien intenta importar este módulo desde un componente cliente.
+ * Así garantizamos que SHOPIFY_ADMIN_TOKEN nunca termine en el bundle
+ * del browser.
  */
 
-// ────────────────────────────────────────────────────────────────────
-// Tipos públicos (consumidos por componentes de UI)
-// ────────────────────────────────────────────────────────────────────
-
-export interface ShopifyImage {
-  url: string
-  altText: string | null
-  width: number | null
-  height: number | null
-}
-
-export interface ShopifyMoney {
-  amount: string
-  currencyCode: string
-}
-
-export interface ShopifyVariant {
-  id: string
-  title: string
-  availableForSale: boolean
-  quantityAvailable: number | null
-  price: ShopifyMoney
-  compareAtPrice: ShopifyMoney | null
-}
-
-export interface ShopifyProduct {
-  id: string
-  handle: string
-  title: string
-  description: string
-  descriptionHtml: string
-  availableForSale: boolean
-  totalInventory: number | null
-  images: ShopifyImage[]
-  variants: ShopifyVariant[]
-  defaultVariant: ShopifyVariant | null
-  priceRange: {
-    min: ShopifyMoney
-    max: ShopifyMoney
-  }
-}
-
-// ────────────────────────────────────────────────────────────────────
-// Config
-// ────────────────────────────────────────────────────────────────────
-
 const SHOPIFY_DOMAIN = process.env.NEXT_PUBLIC_SHOPIFY_DOMAIN ?? ''
-// SHOPIFY_ADMIN_TOKEN solo existe en el servidor.
 const ADMIN_TOKEN = process.env.SHOPIFY_ADMIN_TOKEN ?? ''
 const ADMIN_API_VERSION = '2024-10'
-
-export const PRODUCT_HANDLE =
-  process.env.NEXT_PUBLIC_SHOPIFY_PRODUCT_HANDLE ??
-  'intercomunicador-jzaq-y10-kit-x2-para-moto'
-
-export const RELATED_COLLECTION_HANDLE =
-  process.env.NEXT_PUBLIC_SHOPIFY_RELATED_COLLECTION_HANDLE ?? 'related-products'
 
 const ADMIN_API_URL = SHOPIFY_DOMAIN
   ? `https://${SHOPIFY_DOMAIN}/admin/api/${ADMIN_API_VERSION}/graphql.json`
@@ -80,14 +22,6 @@ const ADMIN_API_URL = SHOPIFY_DOMAIN
 function isAdminConfigured(): boolean {
   return Boolean(SHOPIFY_DOMAIN && ADMIN_TOKEN)
 }
-
-export function getShopifyDomain(): string {
-  return SHOPIFY_DOMAIN
-}
-
-// ────────────────────────────────────────────────────────────────────
-// GraphQL primitive (server-only)
-// ────────────────────────────────────────────────────────────────────
 
 interface GraphQLResponse<T> {
   data?: T
@@ -98,17 +32,11 @@ async function adminFetch<T>(
   query: string,
   variables: Record<string, unknown> = {}
 ): Promise<T> {
-  if (typeof window !== 'undefined') {
-    throw new Error(
-      'lib/shopify.ts: las funciones de fetch son server-only. Llámalas desde un Server Component o API route.'
-    )
-  }
   if (!isAdminConfigured()) {
     throw new Error(
       'Shopify no está configurado. Define NEXT_PUBLIC_SHOPIFY_DOMAIN y SHOPIFY_ADMIN_TOKEN en .env.local'
     )
   }
-
   const res = await fetch(ADMIN_API_URL, {
     method: 'POST',
     headers: {
@@ -117,7 +45,6 @@ async function adminFetch<T>(
       Accept: 'application/json',
     },
     body: JSON.stringify({ query, variables }),
-    // Cacheamos en el servidor con la revalidación de la página (60s).
     next: { revalidate: 60 },
   })
 
@@ -138,7 +65,7 @@ async function adminFetch<T>(
 }
 
 // ────────────────────────────────────────────────────────────────────
-// Adaptadores GraphQL → tipos públicos
+// Tipos GraphQL crudos del Admin API
 // ────────────────────────────────────────────────────────────────────
 
 interface AdminProductRaw {
@@ -187,9 +114,6 @@ function normaliseVariant(
 function normaliseProduct(raw: AdminProductRaw): ShopifyProduct {
   const currency = raw.priceRangeV2.minVariantPrice.currencyCode
   const variants = raw.variants.edges.map((e) => normaliseVariant(e.node, currency))
-  // Disponible para la venta si al menos una variante lo está
-  // (independiente del inventory, así Shopify maneja overselling si está
-  // permitido en la tienda).
   const anyAvailable = variants.some((v) => v.availableForSale)
   return {
     id: raw.id,
@@ -210,7 +134,7 @@ function normaliseProduct(raw: AdminProductRaw): ShopifyProduct {
 }
 
 // ────────────────────────────────────────────────────────────────────
-// Queries Admin API
+// Queries
 // ────────────────────────────────────────────────────────────────────
 
 const ADMIN_PRODUCT_FIELDS = /* GraphQL */ `
@@ -223,12 +147,7 @@ const ADMIN_PRODUCT_FIELDS = /* GraphQL */ `
   totalInventory
   images(first: 12) {
     edges {
-      node {
-        url
-        altText
-        width
-        height
-      }
+      node { url altText width height }
     }
   }
   variants(first: 25) {
@@ -290,14 +209,9 @@ const COLLECTION_QUERY = /* GraphQL */ `
 `
 
 // ────────────────────────────────────────────────────────────────────
-// API pública (server-side)
+// API pública (server-only)
 // ────────────────────────────────────────────────────────────────────
 
-/**
- * Obtiene el producto principal por handle desde el Admin API.
- * Si Shopify no está configurado o falla, devuelve null para que el
- * caller maneje el estado vacío.
- */
 export async function fetchProduct(
   handle: string = PRODUCT_HANDLE
 ): Promise<ShopifyProduct | null> {
@@ -321,17 +235,11 @@ export async function fetchProduct(
   }
 }
 
-/**
- * Obtiene la colección de productos relacionados. Si la colección no
- * existe, hace fallback a los últimos productos de la tienda (excluyendo
- * el principal). Si la tienda solo tiene un producto, devuelve [].
- */
 export async function fetchRelatedProducts(
   limit: number = 8
 ): Promise<ShopifyProduct[]> {
   if (!isAdminConfigured()) return []
   try {
-    // 1) Intentar la colección configurada
     const collData = await adminFetch<{
       collections: {
         edges: Array<{
@@ -349,7 +257,6 @@ export async function fetchRelatedProducts(
       return coll.products.edges.map((e) => normaliseProduct(e.node)).slice(0, limit)
     }
 
-    // 2) Fallback: últimos productos activos excluyendo el principal
     const all = await adminFetch<{
       products: { edges: Array<{ node: AdminProductRaw }> }
     }>(PRODUCTS_QUERY, {
@@ -364,44 +271,4 @@ export async function fetchRelatedProducts(
     console.error('[shopify.fetchRelatedProducts]', err)
     return []
   }
-}
-
-// ────────────────────────────────────────────────────────────────────
-// Checkout — cart permalink (no necesita token)
-// ────────────────────────────────────────────────────────────────────
-
-/**
- * Convierte un GID de variante (gid://shopify/ProductVariant/123)
- * en el ID numérico que usa el cart permalink.
- */
-export function variantNumericId(gid: string): string {
-  const match = gid.match(/(\d+)$/)
-  return match?.[1] ?? gid
-}
-
-/**
- * Devuelve la URL del cart permalink de Shopify para checkout directo.
- *   https://{shop}/cart/{variantNumericId}:{qty}
- *
- * Esto pasa por el flujo nativo de Shopify (precio, envíos, descuentos,
- * inventario, todo). No necesita Storefront API ni Admin API ni token —
- * Shopify resuelve el cart en su servidor y redirige a su checkout.
- */
-export function buildCartPermalink(
-  variantId: string,
-  quantity: number = 1,
-  domain: string = SHOPIFY_DOMAIN
-): string {
-  const id = variantNumericId(variantId)
-  const qty = Math.max(1, Math.floor(quantity))
-  if (!domain) {
-    // Sin dominio configurado, fallback a WhatsApp.
-    return (
-      'https://wa.me/573215009685?text=' +
-      encodeURIComponent(
-        `Hola MSN Products 👋, quiero comprar ${qty} unidad${qty > 1 ? 'es' : ''} del Intercomunicador JZAQ Y10.`
-      )
-    )
-  }
-  return `https://${domain}/cart/${id}:${qty}`
 }

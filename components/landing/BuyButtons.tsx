@@ -2,65 +2,81 @@
 
 import { useState } from 'react'
 import { Loader2, ShoppingCart, Zap, Check } from 'lucide-react'
-import {
-  addToCart,
-  buyNow,
-  getOrCreateCart,
-  isShopifyConfigured,
-  type ShopifyVariant,
-} from '@/lib/shopify'
+import { buildCartPermalink, type ShopifyVariant } from '@/lib/shopify'
 
 interface BuyButtonsProps {
   variant: ShopifyVariant | null
   quantity: number
+  /** Dominio público de Shopify — pasado desde el server component */
+  shopDomain: string
   /** Optional id used to coordinate visibility for sticky bar (data attribute) */
   trackingId?: string
+}
+
+const CART_STORAGE_KEY = 'msn-shopify-pending-cart'
+
+interface PendingCart {
+  variantId: string
+  quantity: number
+  addedAt: number
 }
 
 /**
  * Botones combinados "Comprar ahora" + "Agregar al carrito".
  *
- * Comprar ahora → crea/agrega al carrito y redirige al checkout de Shopify.
- * Agregar al carrito → agrega y muestra un toast de confirmación.
+ * Comprar ahora → redirige al cart permalink de Shopify
+ *                 (https://{shop}/cart/{variantId}:{qty}) que abre el
+ *                 checkout nativo. No necesita ningún API token en el
+ *                 browser, todo lo resuelve Shopify.
  *
- * Si Shopify aún no está configurado, "Comprar ahora" abre WhatsApp como
- * fallback (definido en lib/shopify.ts → buyNow).
+ * Agregar al carrito → guarda el item pendiente en localStorage y muestra
+ *                 toast. Cuando el usuario haga "Comprar ahora", el
+ *                 permalink incluye el item.
  */
-export default function BuyButtons({ variant, quantity, trackingId }: BuyButtonsProps) {
+export default function BuyButtons({
+  variant,
+  quantity,
+  shopDomain,
+  trackingId,
+}: BuyButtonsProps) {
   const [busy, setBusy] = useState<'buy' | 'cart' | null>(null)
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const disabled = !variant || !variant.availableForSale
+  const disabled = !variant
 
-  async function handleBuyNow() {
+  function handleBuyNow() {
     if (!variant) return
     setError(null)
     setBusy('buy')
     try {
-      const url = await buyNow(variant.id, quantity)
+      const url = buildCartPermalink(variant.id, quantity, shopDomain)
       window.location.href = url
     } catch (e) {
-      const msg = e instanceof Error ? e.message : 'No se pudo procesar la compra.'
-      setError(msg)
+      setError(e instanceof Error ? e.message : 'No se pudo procesar la compra.')
       setBusy(null)
     }
   }
 
-  async function handleAddToCart() {
+  function handleAddToCart() {
     if (!variant) return
     setError(null)
     setBusy('cart')
     try {
-      const cart = await getOrCreateCart()
-      if (isShopifyConfigured()) {
-        await addToCart(cart.id, variant.id, quantity)
+      // Persistimos el item pendiente. Como el checkout final lo maneja
+      // Shopify vía cart permalink, esto solo refleja la intención del
+      // usuario para mostrar el ítem en la sticky bar móvil y permitir
+      // un click rápido a "Comprar ahora" después.
+      const pending: PendingCart = {
+        variantId: variant.id,
+        quantity,
+        addedAt: Date.now(),
       }
+      localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(pending))
       setSuccess(true)
       setTimeout(() => setSuccess(false), 2000)
     } catch (e) {
-      const msg = e instanceof Error ? e.message : 'No se pudo agregar al carrito.'
-      setError(msg)
+      setError(e instanceof Error ? e.message : 'No se pudo agregar al carrito.')
     } finally {
       setBusy(null)
     }
@@ -81,10 +97,6 @@ export default function BuyButtons({ variant, quantity, trackingId }: BuyButtons
           <Zap className="h-5 w-5" strokeWidth={2.4} aria-hidden="true" />
         )}
         {busy === 'buy' ? 'Procesando…' : 'Comprar ahora'}
-        <span
-          aria-hidden="true"
-          className="absolute inset-0 -z-10 rounded-full bg-ink-strong opacity-0 transition-opacity duration-300 group-hover:opacity-100"
-        />
       </button>
 
       <button
@@ -117,7 +129,6 @@ export default function BuyButtons({ variant, quantity, trackingId }: BuyButtons
         </p>
       )}
 
-      {/* Toast flotante de éxito */}
       {success && (
         <div
           role="status"
