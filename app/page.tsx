@@ -1,11 +1,10 @@
 import type { Metadata } from 'next'
 import LandingClient from '@/components/landing/LandingClient'
 import {
-  fetchProduct,
-  fetchRelatedProducts,
   getShopifyDomain,
   PRODUCT_HANDLE,
 } from '@/lib/shopify'
+import { fetchProduct, fetchRelatedProducts } from '@/lib/shopify-server'
 import { SITE_NAME } from '@/lib/constants'
 
 // Revalidación cada 60s — el contenido del producto en Shopify
@@ -13,7 +12,8 @@ import { SITE_NAME } from '@/lib/constants'
 export const revalidate = 60
 
 export async function generateMetadata(): Promise<Metadata> {
-  const product = await fetchProduct(PRODUCT_HANDLE)
+  const result = await fetchProduct(PRODUCT_HANDLE)
+  const product = result.ok ? result.product : null
   const titleBase = product?.title ?? 'Intercomunicador JZAQ Y10'
   const title = `${titleBase} — Bluetooth para Moto | ${SITE_NAME}`
   const description =
@@ -23,8 +23,6 @@ export async function generateMetadata(): Promise<Metadata> {
   const ogImage = product?.images[0]?.url
 
   return {
-    // 'absolute' evita que se le pegue el template "%s | MSN Products"
-    // definido en layout.tsx.
     title: { absolute: title },
     description,
     openGraph: {
@@ -45,41 +43,85 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 /**
- * Landing one-product. Hace fetch en el server del producto principal
- * y de los relacionados desde Shopify Admin API. El cliente
- * (LandingClient) maneja la cantidad y los CTAs de carrito.
- *
- * Si la tienda no tiene producto configurado, mostramos un fallback
- * mínimo en lugar de fallar. Mientras tanto el admin de Shopify es la
- * única fuente de verdad para precio, stock e imágenes.
+ * Landing one-product. Hace fetch del producto principal y de los
+ * relacionados en el server. Si Shopify no responde, mostramos un
+ * mensaje accionable con el motivo exacto del fallo.
  */
 export default async function HomePage() {
-  const [product, related] = await Promise.all([
+  const [productResult, related] = await Promise.all([
     fetchProduct(PRODUCT_HANDLE),
     fetchRelatedProducts(8),
   ])
 
-  if (!product) {
-    return (
-      <div className="mx-auto max-w-xl px-6 py-24 text-center">
-        <h1 className="font-display text-3xl font-extrabold text-ink-strong">
-          Estamos preparando esta tienda.
-        </h1>
-        <p className="mt-4 text-ink-light">
-          Verifica que <code>NEXT_PUBLIC_SHOPIFY_DOMAIN</code> y{' '}
-          <code>SHOPIFY_ADMIN_TOKEN</code> estén configurados en{' '}
-          <code>.env.local</code> y que el producto con handle{' '}
-          <code>{PRODUCT_HANDLE}</code> exista en Shopify.
-        </p>
-      </div>
-    )
+  if (!productResult.ok) {
+    return <ConfigDiagnostic reason={productResult.reason} error={productResult.error} />
   }
 
   return (
     <LandingClient
-      product={product}
+      product={productResult.product}
       related={related}
       shopDomain={getShopifyDomain()}
     />
+  )
+}
+
+// ────────────────────────────────────────────────────────────────────
+// Diagnóstico — solo se muestra cuando la API de Shopify no responde.
+// ────────────────────────────────────────────────────────────────────
+
+function ConfigDiagnostic({
+  reason,
+  error,
+}: {
+  reason: 'missing-env' | 'not-found' | 'fetch-error'
+  error?: string
+}) {
+  const hasDomain = Boolean(process.env.NEXT_PUBLIC_SHOPIFY_DOMAIN)
+  const hasToken = Boolean(process.env.SHOPIFY_ADMIN_TOKEN)
+
+  let title = 'Estamos preparando esta tienda.'
+  let description = 'En unos minutos volvemos.'
+  let helpItems: string[] = []
+
+  if (reason === 'missing-env') {
+    title = 'Faltan credenciales de Shopify'
+    description = 'No pude conectar con tu tienda porque las variables de entorno no están cargadas.'
+    helpItems = [
+      hasDomain ? '✓ NEXT_PUBLIC_SHOPIFY_DOMAIN cargada' : '✗ NEXT_PUBLIC_SHOPIFY_DOMAIN faltante',
+      hasToken ? '✓ SHOPIFY_ADMIN_TOKEN cargada' : '✗ SHOPIFY_ADMIN_TOKEN faltante',
+      'Si las acabas de meter en .env.local, reinicia el dev server (Ctrl+C y npm run dev).',
+      'Si estás en Vercel, configúralas en Settings → Environment Variables y vuelve a desplegar.',
+    ]
+  } else if (reason === 'not-found') {
+    title = 'No se encontró el producto'
+    description = `El handle "${PRODUCT_HANDLE}" no existe en tu tienda Shopify.`
+    helpItems = [
+      'Verifica el handle en Shopify Admin → Productos → tu producto → URL.',
+      'Ajusta NEXT_PUBLIC_SHOPIFY_PRODUCT_HANDLE en .env.local con el valor correcto.',
+    ]
+  } else {
+    title = 'Error al consultar Shopify'
+    description = error ?? 'La API de Shopify devolvió un error.'
+    helpItems = [
+      'Verifica que el token tenga el scope read_products habilitado.',
+      'Revisa los logs del servidor para más detalles.',
+    ]
+  }
+
+  return (
+    <div className="mx-auto max-w-xl px-6 py-24">
+      <h1 className="font-display text-3xl font-extrabold text-ink-strong">
+        {title}
+      </h1>
+      <p className="mt-4 text-ink-light">{description}</p>
+      <ul className="mt-6 space-y-2 rounded-2xl border border-border bg-surface p-5 text-sm text-ink">
+        {helpItems.map((item) => (
+          <li key={item} className="leading-relaxed">
+            {item}
+          </li>
+        ))}
+      </ul>
+    </div>
   )
 }

@@ -1,12 +1,13 @@
 /**
- * Shopify client.
+ * Shopify — tipos públicos y helpers seguros para client + server.
  *
- * Estrategia:
- *   • Lecturas de producto/colección → Admin API GraphQL (server-side).
- *     El token (SHOPIFY_ADMIN_TOKEN) nunca viaja al browser.
- *   • Compra ("buy now") → cart permalink de Shopify
- *     (https://{shop}/cart/{variantId}:{qty}). No necesita token, el
- *     browser solo ve la URL y redirige al checkout nativo de Shopify.
+ * IMPORTANT:
+ *   • Las funciones de FETCH al Admin API viven en `lib/shopify-server.ts`
+ *     y están marcadas con `import 'server-only'` para que NUNCA terminen
+ *     en un bundle del browser. Importa desde ahí en server components y
+ *     route handlers.
+ *   • Este archivo solo expone tipos, constantes públicas y `buildCartPermalink`,
+ *     que es 100% client-safe (no toca tokens privados).
  *
  * Variables de entorno (.env.local):
  *   - NEXT_PUBLIC_SHOPIFY_DOMAIN              tu-tienda.myshopify.com  (PÚBLICO)
@@ -58,13 +59,10 @@ export interface ShopifyProduct {
 }
 
 // ────────────────────────────────────────────────────────────────────
-// Config
+// Constantes derivadas de env (públicas)
 // ────────────────────────────────────────────────────────────────────
 
 const SHOPIFY_DOMAIN = process.env.NEXT_PUBLIC_SHOPIFY_DOMAIN ?? ''
-// SHOPIFY_ADMIN_TOKEN solo existe en el servidor.
-const ADMIN_TOKEN = process.env.SHOPIFY_ADMIN_TOKEN ?? ''
-const ADMIN_API_VERSION = '2024-10'
 
 export const PRODUCT_HANDLE =
   process.env.NEXT_PUBLIC_SHOPIFY_PRODUCT_HANDLE ??
@@ -73,306 +71,17 @@ export const PRODUCT_HANDLE =
 export const RELATED_COLLECTION_HANDLE =
   process.env.NEXT_PUBLIC_SHOPIFY_RELATED_COLLECTION_HANDLE ?? 'related-products'
 
-const ADMIN_API_URL = SHOPIFY_DOMAIN
-  ? `https://${SHOPIFY_DOMAIN}/admin/api/${ADMIN_API_VERSION}/graphql.json`
-  : ''
-
-function isAdminConfigured(): boolean {
-  return Boolean(SHOPIFY_DOMAIN && ADMIN_TOKEN)
-}
-
 export function getShopifyDomain(): string {
   return SHOPIFY_DOMAIN
 }
 
 // ────────────────────────────────────────────────────────────────────
-// GraphQL primitive (server-only)
-// ────────────────────────────────────────────────────────────────────
-
-interface GraphQLResponse<T> {
-  data?: T
-  errors?: Array<{ message: string }>
-}
-
-async function adminFetch<T>(
-  query: string,
-  variables: Record<string, unknown> = {}
-): Promise<T> {
-  if (typeof window !== 'undefined') {
-    throw new Error(
-      'lib/shopify.ts: las funciones de fetch son server-only. Llámalas desde un Server Component o API route.'
-    )
-  }
-  if (!isAdminConfigured()) {
-    throw new Error(
-      'Shopify no está configurado. Define NEXT_PUBLIC_SHOPIFY_DOMAIN y SHOPIFY_ADMIN_TOKEN en .env.local'
-    )
-  }
-
-  const res = await fetch(ADMIN_API_URL, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-Shopify-Access-Token': ADMIN_TOKEN,
-      Accept: 'application/json',
-    },
-    body: JSON.stringify({ query, variables }),
-    // Cacheamos en el servidor con la revalidación de la página (60s).
-    next: { revalidate: 60 },
-  })
-
-  if (!res.ok) {
-    const text = await res.text().catch(() => '')
-    throw new Error(`Shopify HTTP ${res.status}: ${text || res.statusText}`)
-  }
-
-  const json = (await res.json()) as GraphQLResponse<T>
-
-  if (json.errors?.length) {
-    throw new Error(
-      `Shopify GraphQL: ${json.errors.map((e) => e.message).join(', ')}`
-    )
-  }
-  if (!json.data) throw new Error('Shopify GraphQL: respuesta vacía')
-  return json.data
-}
-
-// ────────────────────────────────────────────────────────────────────
-// Adaptadores GraphQL → tipos públicos
-// ────────────────────────────────────────────────────────────────────
-
-interface AdminProductRaw {
-  id: string
-  handle: string
-  title: string
-  description: string
-  descriptionHtml: string
-  status: string
-  totalInventory: number | null
-  images: { edges: Array<{ node: ShopifyImage }> }
-  variants: {
-    edges: Array<{
-      node: {
-        id: string
-        title: string
-        availableForSale: boolean
-        inventoryQuantity: number | null
-        price: string
-        compareAtPrice: string | null
-      }
-    }>
-  }
-  priceRangeV2: {
-    minVariantPrice: ShopifyMoney
-    maxVariantPrice: ShopifyMoney
-  }
-}
-
-function normaliseVariant(
-  raw: AdminProductRaw['variants']['edges'][number]['node'],
-  currency: string
-): ShopifyVariant {
-  return {
-    id: raw.id,
-    title: raw.title,
-    availableForSale: raw.availableForSale,
-    quantityAvailable: raw.inventoryQuantity,
-    price: { amount: raw.price, currencyCode: currency },
-    compareAtPrice: raw.compareAtPrice
-      ? { amount: raw.compareAtPrice, currencyCode: currency }
-      : null,
-  }
-}
-
-function normaliseProduct(raw: AdminProductRaw): ShopifyProduct {
-  const currency = raw.priceRangeV2.minVariantPrice.currencyCode
-  const variants = raw.variants.edges.map((e) => normaliseVariant(e.node, currency))
-  // Disponible para la venta si al menos una variante lo está
-  // (independiente del inventory, así Shopify maneja overselling si está
-  // permitido en la tienda).
-  const anyAvailable = variants.some((v) => v.availableForSale)
-  return {
-    id: raw.id,
-    handle: raw.handle,
-    title: raw.title,
-    description: raw.description,
-    descriptionHtml: raw.descriptionHtml,
-    availableForSale: anyAvailable,
-    totalInventory: raw.totalInventory,
-    images: raw.images.edges.map((e) => e.node),
-    variants,
-    defaultVariant: variants[0] ?? null,
-    priceRange: {
-      min: raw.priceRangeV2.minVariantPrice,
-      max: raw.priceRangeV2.maxVariantPrice,
-    },
-  }
-}
-
-// ────────────────────────────────────────────────────────────────────
-// Queries Admin API
-// ────────────────────────────────────────────────────────────────────
-
-const ADMIN_PRODUCT_FIELDS = /* GraphQL */ `
-  id
-  handle
-  title
-  description
-  descriptionHtml
-  status
-  totalInventory
-  images(first: 12) {
-    edges {
-      node {
-        url
-        altText
-        width
-        height
-      }
-    }
-  }
-  variants(first: 25) {
-    edges {
-      node {
-        id
-        title
-        availableForSale
-        inventoryQuantity
-        price
-        compareAtPrice
-      }
-    }
-  }
-  priceRangeV2 {
-    minVariantPrice { amount currencyCode }
-    maxVariantPrice { amount currencyCode }
-  }
-`
-
-const PRODUCT_BY_HANDLE_QUERY = /* GraphQL */ `
-  query ProductByHandle($handle: String!) {
-    productByHandle(handle: $handle) {
-      ${ADMIN_PRODUCT_FIELDS}
-    }
-  }
-`
-
-const PRODUCTS_QUERY = /* GraphQL */ `
-  query Products($first: Int!, $query: String) {
-    products(first: $first, query: $query) {
-      edges {
-        node {
-          ${ADMIN_PRODUCT_FIELDS}
-        }
-      }
-    }
-  }
-`
-
-const COLLECTION_QUERY = /* GraphQL */ `
-  query Collections($query: String!) {
-    collections(first: 1, query: $query) {
-      edges {
-        node {
-          id
-          handle
-          products(first: 12) {
-            edges {
-              node {
-                ${ADMIN_PRODUCT_FIELDS}
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-`
-
-// ────────────────────────────────────────────────────────────────────
-// API pública (server-side)
-// ────────────────────────────────────────────────────────────────────
-
-/**
- * Obtiene el producto principal por handle desde el Admin API.
- * Si Shopify no está configurado o falla, devuelve null para que el
- * caller maneje el estado vacío.
- */
-export async function fetchProduct(
-  handle: string = PRODUCT_HANDLE
-): Promise<ShopifyProduct | null> {
-  if (!isAdminConfigured()) {
-    console.warn('[shopify] No configurado — devolviendo null')
-    return null
-  }
-  try {
-    const data = await adminFetch<{ productByHandle: AdminProductRaw | null }>(
-      PRODUCT_BY_HANDLE_QUERY,
-      { handle }
-    )
-    if (!data.productByHandle) {
-      console.warn(`[shopify] Producto '${handle}' no existe en la tienda.`)
-      return null
-    }
-    return normaliseProduct(data.productByHandle)
-  } catch (err) {
-    console.error('[shopify.fetchProduct]', err)
-    return null
-  }
-}
-
-/**
- * Obtiene la colección de productos relacionados. Si la colección no
- * existe, hace fallback a los últimos productos de la tienda (excluyendo
- * el principal). Si la tienda solo tiene un producto, devuelve [].
- */
-export async function fetchRelatedProducts(
-  limit: number = 8
-): Promise<ShopifyProduct[]> {
-  if (!isAdminConfigured()) return []
-  try {
-    // 1) Intentar la colección configurada
-    const collData = await adminFetch<{
-      collections: {
-        edges: Array<{
-          node: {
-            id: string
-            handle: string
-            products: { edges: Array<{ node: AdminProductRaw }> }
-          }
-        }>
-      }
-    }>(COLLECTION_QUERY, { query: `handle:${RELATED_COLLECTION_HANDLE}` })
-
-    const coll = collData.collections.edges[0]?.node
-    if (coll && coll.products.edges.length > 0) {
-      return coll.products.edges.map((e) => normaliseProduct(e.node)).slice(0, limit)
-    }
-
-    // 2) Fallback: últimos productos activos excluyendo el principal
-    const all = await adminFetch<{
-      products: { edges: Array<{ node: AdminProductRaw }> }
-    }>(PRODUCTS_QUERY, {
-      first: limit + 1,
-      query: 'status:active',
-    })
-    return all.products.edges
-      .map((e) => normaliseProduct(e.node))
-      .filter((p) => p.handle !== PRODUCT_HANDLE)
-      .slice(0, limit)
-  } catch (err) {
-    console.error('[shopify.fetchRelatedProducts]', err)
-    return []
-  }
-}
-
-// ────────────────────────────────────────────────────────────────────
-// Checkout — cart permalink (no necesita token)
+// Cart permalink — checkout sin token
 // ────────────────────────────────────────────────────────────────────
 
 /**
  * Convierte un GID de variante (gid://shopify/ProductVariant/123)
- * en el ID numérico que usa el cart permalink.
+ * en el ID numérico que usa el cart permalink de Shopify.
  */
 export function variantNumericId(gid: string): string {
   const match = gid.match(/(\d+)$/)
@@ -380,22 +89,22 @@ export function variantNumericId(gid: string): string {
 }
 
 /**
- * Devuelve la URL del cart permalink de Shopify para checkout directo.
+ * URL del cart permalink de Shopify para checkout directo.
  *   https://{shop}/cart/{variantNumericId}:{qty}
  *
  * Esto pasa por el flujo nativo de Shopify (precio, envíos, descuentos,
  * inventario, todo). No necesita Storefront API ni Admin API ni token —
  * Shopify resuelve el cart en su servidor y redirige a su checkout.
+ *
+ * Si no hay dominio configurado, fallback a WhatsApp.
  */
 export function buildCartPermalink(
   variantId: string,
   quantity: number = 1,
   domain: string = SHOPIFY_DOMAIN
 ): string {
-  const id = variantNumericId(variantId)
   const qty = Math.max(1, Math.floor(quantity))
   if (!domain) {
-    // Sin dominio configurado, fallback a WhatsApp.
     return (
       'https://wa.me/573215009685?text=' +
       encodeURIComponent(
@@ -403,5 +112,6 @@ export function buildCartPermalink(
       )
     )
   }
+  const id = variantNumericId(variantId)
   return `https://${domain}/cart/${id}:${qty}`
 }

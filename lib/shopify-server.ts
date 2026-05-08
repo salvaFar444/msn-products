@@ -212,12 +212,15 @@ const COLLECTION_QUERY = /* GraphQL */ `
 // API pública (server-only)
 // ────────────────────────────────────────────────────────────────────
 
+export type FetchProductResult =
+  | { ok: true; product: ShopifyProduct }
+  | { ok: false; reason: 'missing-env' | 'not-found' | 'fetch-error'; error?: string }
+
 export async function fetchProduct(
   handle: string = PRODUCT_HANDLE
-): Promise<ShopifyProduct | null> {
+): Promise<FetchProductResult> {
   if (!isAdminConfigured()) {
-    console.warn('[shopify] No configurado — devolviendo null')
-    return null
+    return { ok: false, reason: 'missing-env' }
   }
   try {
     const data = await adminFetch<{ productByHandle: AdminProductRaw | null }>(
@@ -225,13 +228,13 @@ export async function fetchProduct(
       { handle }
     )
     if (!data.productByHandle) {
-      console.warn(`[shopify] Producto '${handle}' no existe en la tienda.`)
-      return null
+      return { ok: false, reason: 'not-found' }
     }
-    return normaliseProduct(data.productByHandle)
+    return { ok: true, product: normaliseProduct(data.productByHandle) }
   } catch (err) {
-    console.error('[shopify.fetchProduct]', err)
-    return null
+    const msg = err instanceof Error ? err.message : 'Error desconocido'
+    console.error('[shopify.fetchProduct]', msg)
+    return { ok: false, reason: 'fetch-error', error: msg }
   }
 }
 
